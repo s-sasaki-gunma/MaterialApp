@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <title>A4</title>
+  <link rel="stylesheet" href="./normalize.min.css">
+  <link rel="stylesheet" href="./paper.min.css">
+  <style>
+    @page { size:A4 portrait; margin: 0mm; }
+    table { margin: auto; }
+    th,td,table { font-size:7mm; text-align:center; border-collapse:collapse; border:solid 1px #000000; }
+    th,td { width:15mm; height:15mm; }
+    th { background-color: azure; }
+    .title { text-align: center; }
+    .namespace { text-align: right; margin-bottom: 20mm; }
+    .namespace span { display:inline-block; padding-right: 50mm; border-bottom:solid 1px #000000;}
+  </style>
+</head>
+
+<body id="main" class="A4">
+  <section class="sheet padding-10mm">
+    <h1 class="title">[かけ算] 100マス計算
+    <select id="Lv" onchange="generateNumerics()">
+      <option value="0">Lv.0</option>
+      <option value="1">Lv.1</option>
+      <option value="2">Lv.2</option>
+      <option value="3">Lv.3</option>
+      <option value="4">Lv.4</option>
+      <option value="5">Lv.5</option>
+      <option value="6">Lv.6</option>
+      <option value="7">Lv.7</option>
+      <option value="8">Lv.8</option>
+      <option value="9">Lv.9</option>
+      <option value="10">Lv.10</option>
+    </select>
+    </h1>
+    <h2 class="namespace"><span>　　年　　組　　番　氏名</span></h2>
+    <div id="question"></div>
+  </section>
+  <section class="sheet padding-10mm">
+    <h1 class="title">[かけ算] 100マス計算（模範解答）</h1>
+    <h2 class="namespace"><span>　　年　　組　　番　氏名</span></h2>
+    <div id="answer"></div>
+  </section>
+</body>
+
+<script>
+    function generateNumerics(){
+        const val = document.getElementById("Lv").value;
+        var list_col = [0,1,2,3,4,5,6,7,8,9,10];
+        var list_row = [0,1,2,3,4,5,6,7,8,9,10];
+
+        if(val==1){
+            list_col = randNumerics(list_col);
+        } else if(val==2){
+            list_col = randNumerics(list_col);
+            list_row = list_col;
+        } else if(val==3){
+            list_col = randNumerics(list_col);
+            list_row = randNumerics(list_col);
+        } else if(val==4){
+          list_col = [0,11,12,13,14,15,16,17,18,19,20];
+        } else if(val==5){
+          list_col = [0,11,12,13,14,15,16,17,18,19,20];
+          list_col = randNumerics(list_col);
+        } else if(val==6){
+          list_col = [0,11,12,13,14,15,16,17,18,19,20];
+          list_col = randNumerics(list_col);
+          list_row = randNumerics(list_row);
+        } else if(val==7){
+          list_col = [0,11,12,13,14,15,16,17,18,19,20];
+          list_row = [0,11,12,13,14,15,16,17,18,19,20];
+        } else if(val==8){
+          list_col = [0,11,12,13,14,15,16,17,18,19,20];
+          list_row = [0,11,12,13,14,15,16,17,18,19,20];
+          list_col = randNumerics(list_col);
+        } else if(val==9){
+          list_col = [0,11,12,13,14,15,16,17,18,19,20];
+          list_row = [0,11,12,13,14,15,16,17,18,19,20];
+          list_col = randNumerics(list_col);
+          list_row = list_col;
+        } else if(val==10){
+          list_col = [0,11,12,13,14,15,16,17,18,19,20];
+          list_row = [0,11,12,13,14,15,16,17,18,19,20];
+          list_col = randNumerics(list_col);
+          list_row = randNumerics(list_col);
+        }
+
+        var $div = document.getElementById('question');
+        $div.innerHTML = "";
+        $div.appendChild(generateTable(list_row, list_col, false));
+        $div = document.getElementById('answer');
+        $div.innerHTML = "";
+        $div.appendChild(generateTable(list_row, list_col, true));
+    }
+
+    function randNumerics(x){
+        var tmp = x.slice(1,11);
+        var ret = [0];
+        while(tmp.length>0){
+            var t = Math.floor(Math.random() * tmp.length);
+            ret.push(tmp[t]);
+            tmp.splice(t,1);
+        }
+        if( ret.toString() === x.toString() ){
+          ret = randNumerics(x);
+        }
+        return ret;
+    }
+
+    function generateTable(list_row, list_col, flag_answer){
+        var $table = document.createElement('table');
+        var $tbody = document.createElement('tbody');
+        var $tr = document.createElement('tr');
+        var $th = document.createElement('th');
+        $tr.appendChild($th);
+        for(let j=1;j<11;j++){
+            $th = document.createElement('th');
+            $th.textContent = list_row[j];
+            $tr.appendChild($th);
+        }
+        $tbody.appendChild($tr);
+        for(let i=1;i<11;i++){
+            $tr = document.createElement('tr');
+            $th = document.createElement('th');
+            $th.textContent = list_col[i];
+            $tr.appendChild($th);
+            for(let j=1;j<11;j++){
+                var $td = document.createElement('td');
+                if(flag_answer){
+                    $td.textContent = list_col[i] * list_row[j];
+                }
+                $tr.appendChild($td);
+            }
+            $tbody.appendChild($tr);
+        }
+        $table.appendChild($tbody);
+        return $table;
+    }
+
+    generateNumerics();
+</script>
+</html>
