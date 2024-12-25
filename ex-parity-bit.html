@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>パリティビット | 情報科演習問題</title>
+    <link rel="stylesheet" type="text/css" href="./common.css">
+    <script src="./common.js"></script>
+</head>
+<body>
+    <header class="title">
+        <h1><a href="./">情報演習</a>パリティビット</h1>
+    </header>
+    <main>
+        <section class="PEE">
+            <h2>確認事項</h2>
+            <p>xxxxx</p>
+            <hr>
+            <p>ビットとバイトの関係性は次の計算式で求められる。</p>
+            <p>$$
+            \begin{eqnarray*}
+            1 \text{ Byte} &=& 8 \text{ bit}\\
+            \end{eqnarray*}
+            $$</p>
+        </section>
+    </main>
+</body>
+<script>
+    createExercises(1);
+
+    function createQuestion1(){
+        let n = Math.floor(Math.random() * 100);
+        let answer = 8*n;
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "$ " + n + "\\text{ Byte }$は何$\\text{ bit }$か答えよ";
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{eqnarray*}
+        `+ n +` \\text{ Byte} &=& 8 \\times` + n + `\\text{ bit} \\\\[1em]
+        &=& ` + answer + `\\text{ bit} \\\\[1em]
+        \\end{eqnarray*}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,1);
+    }
+</script>
+</html>

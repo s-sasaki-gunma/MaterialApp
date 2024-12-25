@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>2進数から10進数への変換 | 情報科演習問題</title>
+    <link rel="stylesheet" type="text/css" href="./common.css">
+    <script src="./common.js"></script>
+</head>
+<body>
+    <header class="title">
+        <h1><a href="./">情報演習</a>2進数から10進数への変換</h1>
+    </header>
+    <main>
+        <section class="PEE">
+            <h2>確認事項</h2>
+            <p>xxxxx</p>
+            <hr>
+            <p>2進数から10進数への変換は、次の計算式で求められる。</p>
+            <p>$$
+            \begin{eqnarray*}
+            1 \text{ Byte} &=& 8 \text{ bit}\\
+            n \text{ Byte} &=& 8n \text{ bit}
+            \end{eqnarray*}
+            $$</p>
+        </section>
+    </main>
+</body>
+<script>
+    createExercises(2);
+
+    function createQuestion1(){
+        let answer = Math.floor(Math.random() * 1024);
+        let n = Number.parseInt(answer.toString(2),10);
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "２進数の $ " + n + " $ " + " を10進数に変換せよ";
+        let _n = n;
+        let i = 0;
+        let tmp = [];
+        while(_n > 0){
+            if(_n % 10 == 1) tmp.push(i);
+            _n = (_n/10)|0;
+            i += 1;
+        }
+        tmp = tmp.reverse();
+        let txt1 = 10**tmp[0];
+        let txt2 = "2^{"+tmp[0]+"}";
+        let txt3 = 2**tmp[0];
+        for(i=1;i<tmp.length;i++){
+            txt1 += ("+{}{"+10**tmp[i]+"}");
+            txt2 += ("+{}2^{"+tmp[i]+"}");
+            txt3 += ("+{}{"+2**tmp[i]+"}");
+        }
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{align}
+        `+ n +` &= `+ txt1 + `\\\\[1em]
+        \\text{(以下、10進数)}\\\\
+        &= `+ txt2 + `\\\\[1em]
+        &= `+ txt3 + `\\\\[1em]
+        &= ` + answer + `\\\\[1em]
+        \\end{align}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,1);
+    }
+    function createQuestion2(){
+        let carry=1,answer=1;
+        while(Number.isInteger(answer)){
+            carry = 2**Math.floor(1+Math.random() * 4);
+            answer = Math.floor((1+Math.random()) * carry*carry) / carry;
+        }
+        let n = Number.parseFloat(answer.toString(2),10);
+        let carry2 = Number.parseInt(carry.toString(2),10);
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "２進数の $ " + n + " $ " + " を10進数に変換せよ";
+        let _n = n*carry2;
+        let txt0 = n + `&=\\dfrac{` + _n + `}{` + carry2 + `}`;
+        let i = 0;
+        let tmp = [];
+        while(_n > 0){
+            if(_n % 10 == 1) tmp.push(i);
+            _n = (_n/10)|0;
+            i += 1;
+        }
+        tmp = tmp.reverse();
+        let txt1 = 10**tmp[0];
+        let txt2 = "2^{"+tmp[0]+"}";
+        let txt3 = 2**tmp[0];
+        for(i=1;i<tmp.length;i++){
+            txt1 += ("+{}{"+10**tmp[i]+"}");
+            txt2 += ("+{}2^{"+tmp[i]+"}");
+            txt3 += ("+{}{"+2**tmp[i]+"}");
+        }
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{align}
+        `+ txt0 + `\\\\[1em]
+        &= \\dfrac{`+ txt1 + `}{` + carry2 + `}\\\\[1em]
+        \\text{(以下、10進数)}\\\\
+        &= \\dfrac{`+ txt2 + `}{2^{` + (String(carry2).length-1) + `}}\\\\[1em]
+        &= \\dfrac{`+ txt3 + `}{` + carry + `}\\\\[1em]
+        &= ` + answer + `\\\\[1em]
+        \\end{align}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,2);
+    }
+</script>
+</html>

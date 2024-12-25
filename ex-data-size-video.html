@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>動画のデータ量 | 情報科演習問題</title>
+    <link rel="stylesheet" type="text/css" href="./common.css">
+    <script src="./common.js"></script>
+</head>
+<body>
+    <header class="title">
+        <h1><a href="./">情報演習</a>動画のデータ量</h1>
+    </header>
+    <main>
+        <section class="PEE">
+            <h2>確認事項</h2>
+            <p>xxxxx</p>
+            <hr>
+            <p>動画のデータ量は、次の計算式で求められる。</p>
+            <p>$$
+            \begin{aligned}
+            データ量[bit] &= フレームレート[fps] \times 時間[秒] \times 階調[bit] \times 総画素数 \\
+            &= フレームレート[fps] \times 時間[秒] \times 階調[bit] \times 横方向の画素数 \times 縦方向の画素数 \\
+            \end{aligned}
+            $$</p>
+
+            <p>一般的なフレームレート</p>
+            <p>$$
+            \begin{array}{lc}
+            媒体 & フレームレート\\
+            フィルム映画 &  24 fps\\
+            アナログ放送 &  30 fps\\
+            デジタル放送 &  60 fps\\
+            テレビゲーム & 120 fps\\
+            \end{array}
+            $$</p>
+        </section>
+    </main>
+</body>
+<script>
+    createExercises(1);
+
+    function createQuestion1(){
+        let dict_resolution = {"SVGA":[800,600],"XGA":[1024,764],"SXGA":[1280,1024],"HD":[1280,720],"FHD":[1920,1080],"4K":[3840,2160],"8K":[7680,4320]};
+        let resolution = Object.keys(dict_resolution);
+        resolution = resolution[Math.floor(Math.random()*resolution.length)];
+        let dict_bit = {"白黒":1,"グレースケール":8,"8bitカラー":8,"12bitカラー":12,"15bitカラー":15,"18bitカラー":18,"フルカラー":24};
+        let bit = Object.keys(dict_bit);
+        bit = bit[Math.floor(Math.random()*bit.length)];
+        let list_time = ["秒","分","時間"];
+        let time1 = Math.floor(1+Math.random()*60);
+        let time2 = list_time[Math.floor(Math.random()*list_time.length)];
+        let time3 = 60**list_time.indexOf(time2);
+        let list_fps = [24,30,60,120];
+        let fps = list_fps[Math.floor(Math.random()*list_fps.length)];
+        let answer = fps*time1*time3*dict_bit[bit]*dict_resolution[resolution][0]*dict_resolution[resolution][1]/8;
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "$\\text{"+resolution+"}$解像度の$\\text{"+bit+"動画}$において、フレームレートが$"+fps+"\\text{ [fps]}$であったとき、長さが$"+time1+"\\text{ ["+time2+"]}$ならばデータ量は 何$\\text{ [Byte]}$であるか求めよ";
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{eqnarray*}
+        `+ time1 +` \\text{ [`+time2+`]} &=& ` + (time1*time3) + `\\text{ [秒]} \\\\[1em]
+        `+ dict_bit[bit] +` \\text{ [bit]} &=& \\dfrac{` + dict_bit[bit] + `}{8} \\text{ [Byte]} \\\\[1em]
+        `+ resolution +` &=& ` + dict_resolution[resolution][0] + `\\times` + dict_resolution[resolution][1] + `\\text{ [画素]}\\\\[1em]
+        故に、\\\\
+        データ量 &=& \\dfrac{` + fps + `\\text{ [fps]} \\times` + (time1*time3) + `\\text{ [秒]} \\times` + dict_bit[bit] + `\\times` + dict_resolution[resolution][0] + `\\times` + dict_resolution[resolution][1] + `}{8} \\text{ [Byte]}\\\\[1em]
+        &=& `+answer+`\\text{ [Byte]}\\\\[1em]
+        \\end{eqnarray*}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,1);
+    }
+</script>
+</html>

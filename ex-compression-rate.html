@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>データの圧縮率 | 情報科演習問題</title>
+    <link rel="stylesheet" type="text/css" href="./common.css">
+    <script src="./common.js"></script>
+</head>
+<body>
+    <header class="title">
+        <h1><a href="./">情報演習</a>データの圧縮率</h1>
+    </header>
+    <main>
+        <section class="PEE">
+            <h2>確認事項</h2>
+            <p>xxxxx</p>
+            <hr>
+            <p>データの圧縮率は、次の計算式で求められる。</p>
+            <p>$$
+            \begin{eqnarray*}
+            圧縮率 = \dfrac{圧縮後のデータ量}{もとのデータ量}\\
+            \end{eqnarray*}
+            $$</p>
+        </section>
+    </main>
+</body>
+<script>
+    createExercises(1);
+
+    function createQuestion1(){
+        let answer = Math.floor(1+Math.random() * 99);
+        let n1 = Math.floor(Math.random() * 1000);
+        let n2 = n1*answer/100;
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "$" + n1 + "\\text{ [Byte] }$のデータを圧縮したら、$" + n2 + "\\text{ [Byte] }$のデータになった。\nこの場合の圧縮率[%]を求めよ。";
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{eqnarray*}
+        \\text{圧縮率} &=& \\dfrac{` + n2 + `}{` + n1 + `} \\\\[1em]
+        &=& ` + answer/100 + `\\\\[1em]
+        &=& ` + answer + `\\text{ [%]} \\\\[1em]
+        \\end{eqnarray*}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,1);
+    }
+</script>
+</html>

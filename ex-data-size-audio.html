@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>音声のデータ量 | 情報科演習問題</title>
+    <link rel="stylesheet" type="text/css" href="./common.css">
+    <script src="./common.js"></script>
+</head>
+<body>
+    <header class="title">
+        <h1><a href="./">情報演習</a>音声のデータ量</h1>
+    </header>
+    <main>
+        <section class="PEE">
+            <h2>確認事項</h2>
+            <p>xxxxx</p>
+            <hr>
+            <p>音声のデータ量は、次の計算式で求められる。</p>
+            <p>$$
+            \begin{eqnarray*}
+            データ量 \text{ [bit] } = サンプリング周波数 \text{ [Hz] } \times 量子化ビット数 \text{ [bit] } \times 時間 \text{ [s] } \times チャンネル数\\
+            \end{eqnarray*}
+            $$</p>
+        </section>
+    </main>
+</body>
+<script>
+    createExercises(1);
+
+    function createQuestion1(){
+        let list_hz = [ 32000, 44100, 48000, 96000, 192000];
+        let hz = list_hz[Math.floor(Math.random()*list_hz.length)];
+        let list_bit = [8, 16, 24, 32];
+        let bit = list_bit[Math.floor(Math.random()*list_bit.length)];
+        let list_time = ["秒","分","時間"];
+        let time1 = Math.floor(1+Math.random()*60);
+        let time2 = list_time[Math.floor(Math.random()*list_time.length)];
+        let time3 = 60**list_time.indexOf(time2);
+        let list_channel = ["モノラル","ステレオ"];
+        let ch1 = list_channel[Math.floor(Math.random()*list_channel.length)];
+        let ch2 = list_channel.indexOf(ch1)+1;
+        let answer = hz*bit*time1*time3*ch2;
+
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "1秒間に $ " + hz + "\\text{回 }$の標本化を行い$" +bit+ "\\text{ [bit] }$で量子化した$"+time1+"\\text{ ["+time2+"] }$の" +ch1+ "音声のデータ量$\\text{ [bit] }$を求めよ。";
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{eqnarray*}
+        `+ time1 +` \\text{ [`+time2+`]} &=& ` + (time1*time3) + `\\text{ [秒]} \\\\[1em]
+        `+ ch1 +` \\text{ 音声} &=& ` + ch2 + `\\text{ [チャンネル]} \\\\[1em]
+        故に、\\\\
+        データ量 \\text{ [bit]} &=& ` + hz + `\\text{ [Hz]}\\times` + bit + `\\text{ [bit]}\\times` + (time1*time3) + `\\text{ [秒]}\\times` + (ch2) + `\\text{ [チャンネル]} \\\\[1em]
+        &=& `+answer+`\\text{ [bit]}\\\\[1em]
+        \\end{eqnarray*}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,1);
+    }
+</script>
+</html>

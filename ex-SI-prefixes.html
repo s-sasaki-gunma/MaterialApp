@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SI接頭語 | 情報科演習問題</title>
+    <link rel="stylesheet" type="text/css" href="./common.css">
+    <script src="./common.js"></script>
+</head>
+<body>
+    <header class="title">
+        <h1><a href="./">情報演習</a>SI接頭語</h1>
+    </header>
+    <main>
+        <section class="PEE">
+            <h2>確認事項</h2>
+            <p>xxxxx</p>
+            <hr>
+            <p>次の計算式で求められる。</p>
+            <p>$$
+            \begin{array}{lccr}
+            接頭語&読み方&SI&\\
+            K&キロ&10^{3}&1,000\\
+            M&メガ&10^{6}&1,000,000\\
+            G&ギガ&10^{9}&1,000,000,000\\
+            T&テラ&10^{12}&1,000,000,000,000\\
+            P&ペタ&10^{15}&1,000,000,000,000,000\\
+            E&エクサ&10^{18}&1,000,000,000,000,000,000\\
+            Z&ゼタ&10^{21}&1,000,000,000,000,000,000,000\\
+            Y&ヨタ&10^{24}&1,000,000,000,000,000,000,000,000\\
+            \end{array}
+            $$</p>
+        </section>
+    </main>
+</body>
+<script>
+    createExercises(1);
+
+    function createQuestion1(){
+        let n = Math.floor(Math.random() * 1250)*8;
+        let SI = ["","K","M","G","T","P","E"];
+        let BI = ["bit","B"];
+        let a1 = SI.splice(Math.floor(Math.random()*SI.length),1)[0];
+        let a2 = BI[Math.floor(Math.random()*2)];
+        let b1 = SI.splice(Math.floor(Math.random()*SI.length),1)[0];
+        let b2 = BI[Math.floor(Math.random()*2)];
+        SI = ["","K","M","G","T","P","E"];
+        let a3=3*SI.indexOf(a1);
+        let b3=3*SI.indexOf(b1);
+        let r0=8**(BI.indexOf(a2)-BI.indexOf(b2));
+        let r1 = "\\times \\dfrac{1}{8}";
+        if(r0==1) { r1 = ""; }
+        else if(r0==8) { r1 = "\\times 8"; }
+        let answer = n*10**(a3-b3)*r0;
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "$ " + n + " \\text{ " + a1+a2 + " }$ は何 $ \\text{ " + b1+b2 + " } $ であるか答えよ";
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{eqnarray*}
+        `+ n +` \\text{ ` + a1+a2 + ` } &=& `+ n + r1 +`\\times \\dfrac{ 10^{` + a3 + `}}{ 10^{` + b3 + `}}\\text{ ` + b1+b2 + ` } \\\\[1em]
+        &=& ` + answer.toFixed(Math.max(0,b3-a3)) + `\\text{ ` + b1+b2 + ` } \\\\[1em]
+        \\end{eqnarray*}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,1);
+    }
+</script>
+</html>

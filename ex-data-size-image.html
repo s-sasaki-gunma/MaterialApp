@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>画像のデータ量 | 情報科演習問題</title>
+    <link rel="stylesheet" type="text/css" href="./common.css">
+    <script src="./common.js"></script>
+</head>
+<body>
+    <header class="title">
+        <h1><a href="./">情報演習</a>画像のデータ量</h1>
+    </header>
+    <main>
+        <section class="PEE">
+            <h2>確認事項</h2>
+            <p>xxxxx</p>
+            <hr>
+            <p>画像のデータ量は、次の計算式で求められる。</p>
+            <p>$$
+            \begin{aligned}
+            データ量[bit] &= 階調[bit] \times 総画素数 \\
+            &= 階調[bit] \times 横方向の画素数 \times 縦方向の画素数 \\
+            \end{aligned}
+            $$</p>
+
+            <p>解像度の表し方</p>
+            <p>$$
+            \begin{aligned}
+            &\text{ディスプレイ解像度} &・・・& 横方向の画素数 \times 縦方向の画素数\\
+            &\text{dpi (dot per inch)} &・・・& 1 インチ あたりの ドット（画素）数\\
+            &\text{ppi (pixels per inch)} &・・・& 1 インチ あたりの ピクセル数\\
+            \end{aligned}
+            \\
+            $$</p>
+
+            <p>主要なディスプレイ解像度一覧</p>
+            <p>$$
+            \begin{array}{lcc}
+            名称 & 横 & 縦\\
+            SVGA &  800 &  600\\
+            XGA  & 1024 &  764\\
+            SXGA & 1280 & 1024\\
+            HD   & 1280 &  720\\
+            FHD  & 1920 & 1080\\
+            4K   & 3840 & 2160\\
+            8K   & 7680 & 4320\\
+            \end{array}
+            $$</p>
+
+            <p>主要な階調一覧</p>
+            <p>$$
+            \begin{array}{lcl}
+            名称            & 画素あたりのbit数 &色数\\
+            白黒            & 1     &2^{1}=2\\
+            グレースケール   & 8     &2^{8}=256\\
+            8bitカラー      & 8     &2^{8}=256\\
+            12bitカラー     & 12    &2^{12}=4,096\\
+            15bitカラー     & 15    &2^{15}=32,768\\
+            18bitカラー     & 18    &2^{18}=262,144\\
+            フルカラー      & 24    &2^{24}=16,777,216\\
+            \end{array}
+            $$</p>
+        </section>
+    </main>
+</body>
+<script>
+    createExercises(3);
+
+    function createQuestion1(){
+        let dict_resolution = {"SVGA":[800,600],"XGA":[1024,764],"SXGA":[1280,1024],"HD":[1280,720],"FHD":[1920,1080],"4K":[3840,2160],"8K":[7680,4320]};
+        let resolution = Object.keys(dict_resolution);
+        resolution = resolution[Math.floor(Math.random()*resolution.length)];
+        let dict_bit = {"白黒":1,"グレースケール":8,"8bitカラー":8,"12bitカラー":12,"15bitカラー":15,"18bitカラー":18,"フルカラー":24};
+        let bit = Object.keys(dict_bit);
+        bit = bit[Math.floor(Math.random()*bit.length)];
+        let answer = dict_bit[bit]*dict_resolution[resolution][0]*dict_resolution[resolution][1]/8;
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "$\\text{"+resolution+"}$解像度の$\\text{"+bit+"画像}$のデータ量は 何$\\text{ [Byte]}$であるか求めよ";
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{eqnarray*}
+        `+ dict_bit[bit] +` \\text{ [bit]} &=& \\dfrac{` + dict_bit[bit] + `}{8} \\text{ [Byte]} \\\\[1em]
+        `+ resolution +` &=& ` + dict_resolution[resolution][0] + `\\times` + dict_resolution[resolution][1] + `\\text{ [画素]}\\\\[1em]
+        故に、\\\\
+        データ量 &=& \\dfrac{` + dict_bit[bit] + `\\times` + dict_resolution[resolution][0] + `\\times` + dict_resolution[resolution][1] + `}{8} \\text{ [Byte]}\\\\[1em]
+        &=& `+answer+`\\text{ [Byte]}\\\\[1em]
+        \\end{eqnarray*}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,1);
+    }
+    function createQuestion2(){
+        let Hi = Math.floor(1+Math.random() * 20);
+        let Hc = Hi*2.54;
+        let Wi = Math.floor(1+Math.random() * 20);
+        let Wc = Wi*2.54;
+        let list_dpi = [72, 96, 150, 200, 300, 350, 400, 600, 1200];
+        let dpi = list_dpi[Math.floor(Math.random()*list_dpi.length)];
+        let answer = Hi*dpi*Wi*dpi;
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "高さ $"+Hc+"\\text{ [cm]}$かつ幅 $"+Wc+"\\text{ [cm]}$で解像度 $"+dpi+"\\text{ [dpi]}$の画像の総画素数を求めよ$$1\\text{ [inch]}=2.54\\text{ [cm]}$$";
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{eqnarray*}
+        横方向の画素数  &=& \\dfrac{` + Wc + `\\text{ [cm]} }{ 2.54 \\text{ [cm/inch]} }\\times`+ dpi +`\\text{ [dpi]} \\\\[1em]
+                       &=& ` + Wi + `\\text{ [inch]} \\times`+ dpi +`\\text{ [dpi]} \\\\[1em]
+                       &=& ` + Wi * dpi +`\\text{ [画素]} \\\\[1em]
+        縦方向の画素数  &=& \\dfrac{` + Hc + `\\text{ [cm]} }{ 2.54 \\text{ [cm/inch]} }\\times`+ dpi +`\\text{ [dpi]} \\\\[1em]
+                       &=& ` + Hi + `\\text{ [inch]} \\times`+ dpi +`\\text{ [dpi]} \\\\[1em]
+                       &=& ` + Hi * dpi +`\\text{ [画素]} \\\\[1em]
+        故に、\\\\
+        総画素数 &=& \\ ` + Wi*dpi + ` \\times `+ Hi*dpi +` \\\\[1em]
+        &=& `+answer+`\\text{ [画素]}\\\\[1em]
+        \\end{eqnarray*}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,2);
+    }
+    function createQuestion3(){
+        let Hi = Math.floor(1+Math.random() * 20);
+        let Hc = Hi*2.54;
+        let Wi = Math.floor(1+Math.random() * 20);
+        let Wc = Wi*2.54;
+        let list_dpi = [72, 96, 150, 200, 300, 350, 400, 600, 1200];
+        let dpi = list_dpi[Math.floor(Math.random()*list_dpi.length)];
+        let dict_bit = {"白黒":1,"グレースケール":8,"8bitカラー":8,"12bitカラー":12,"15bitカラー":15,"18bitカラー":18,"フルカラー":24};
+        let bit = Object.keys(dict_bit);
+        bit = bit[Math.floor(Math.random()*bit.length)];
+        let answer = Hi*dpi*Wi*dpi*dict_bit[bit]/8;
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "縦 $"+Hc+"\\text{ [cm]}$かつ横 $"+Wc+"\\text{ [cm]}$の画像を、解像度 $"+dpi+"\\text{ [dpi]}$かつ$"+bit+"$の色情報を指定してスキャナーで読み込むと、データ量は何$\\text{ [Byte]}$になるか求めよ。$$1\\text{ [inch]}=2.54\\text{ [cm]}$$";
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{eqnarray*}
+        `+ dict_bit[bit] + `\\text{ [bit]}  &=& \\dfrac{`+ dict_bit[bit] + `}{ 8 } \\text{ [Byte]}\\\\[1em]
+                                            &=& `+ dict_bit[bit]/8 + `\\text{ [Byte]}  \\\\[1em]
+        横方向の画素数  &=& \\dfrac{` + Wc + `\\text{ [cm]} }{ 2.54 \\text{ [cm/inch]} }\\times`+ dpi +`\\text{ [dpi]} \\\\[1em]
+                       &=& ` + Wi + `\\text{ [inch]} \\times`+ dpi +`\\text{ [dpi]} \\\\[1em]
+                       &=& ` + Wi * dpi +`\\text{ [画素]} \\\\[1em]
+        縦方向の画素数  &=& \\dfrac{` + Hc + `\\text{ [cm]} }{ 2.54 \\text{ [cm/inch]} }\\times`+ dpi +`\\text{ [dpi]} \\\\[1em]
+                       &=& ` + Hi + `\\text{ [inch]} \\times`+ dpi +`\\text{ [dpi]} \\\\[1em]
+                       &=& ` + Hi * dpi +`\\text{ [画素]} \\\\[1em]
+        故に、\\\\
+        データ量 &=& \\ ` + dict_bit[bit]/8 + `\\text{ [Byte]} \\times` + Wi*dpi + ` \\times `+ Hi*dpi +` \\\\[1em]
+        &=& `+answer+`\\text{ [Byte]}\\\\[1em]
+        \\end{eqnarray*}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,3);
+    }
+</script>
+</html>

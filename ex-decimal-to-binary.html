@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>10進数から2進数への変換 | 情報科演習問題</title>
+    <link rel="stylesheet" type="text/css" href="./common.css">
+    <script src="./common.js"></script>
+</head>
+<body>
+    <header class="title">
+        <h1><a href="./">情報演習</a>10進数から2進数への変換</h1>
+    </header>
+    <main>
+        <section class="PEE">
+            <h2>確認事項</h2>
+            <p>xxxxx</p>
+            <hr>
+            <p>10進数から2進数への変換は、次の計算式で求められる。</p>
+            <p>$$
+            \begin{eqnarray*}
+            1 \text{ Byte} &=& 8 \text{ bit}\\
+            n \text{ Byte} &=& 8n \text{ bit}
+            \end{eqnarray*}
+            $$</p>
+        </section>
+    </main>
+</body>
+<script>
+    createExercises(3);
+    
+    function createQuestion1(){
+        let n = Math.floor(Math.random() * 2048);
+        let answer = n.toString(2);
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "10進数の $ " + n + " $ " + " を２進数に変換せよ";
+        let tmp ="";
+        while (n>0){
+            tmp += (n +`& \\div 2 & = & ` + (n/2|0) + ` & \\text{ あまり } ` + n%2 + ` \\\\[0.2 em]
+            `);
+            n=n/2|0;
+        }
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{eqnarray*}
+        ` + tmp + `
+        &&&&&\\text{商が0になったため計算終了}\\\\
+        \\end{eqnarray*}
+        $$
+        $$
+        %\\begin{eqnarray*}
+        \\text{あまり部分を下から上に並べると、} ` + answer + `
+        %\\end{eqnarray*}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,1);
+    }
+    function createQuestion2(){
+        let carry = 2**Math.floor(2+Math.random() * 9);
+        let n = Math.floor(1 + Math.random() * (carry-1)) / carry;
+        let answer = n.toString(2);
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "10進数の $ " + n + " $ " + " を２進数に変換せよ";
+        let tmp ="";
+        while (n>0){
+            tmp += (n +`& \\times 2 & = & ` + n*2 + ` & \\text{ 整数部分は } ` + (n*2|0) + ` \\\\[0.2 em]
+            `);
+            n=(n*2)-(n*2|0);
+        }
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{eqnarray*}
+        `+tmp+`
+        &&&&&\\text{積が1になったため計算終了}\\\\
+        \\end{eqnarray*}
+        $$
+        $$
+        %\\begin{eqnarray*}
+        \\text{整数部分を上から並べると、} ` + answer + `
+        %\\end{eqnarray*}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,2);
+    }
+    function createQuestion3(){
+        let n=1;
+        while(Number.isInteger(n)){
+            let carry = 2**Math.floor(1+Math.random() * 10);
+            n = Math.floor((1+Math.random()) * 32*carry) / carry;
+        }
+        let answer = n.toString(2);
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "10進数の $ " + n + " $ " + " を２進数に変換せよ";
+        let tmp1="";
+        let tmp2="";
+        let n1=n|0;
+        let n2=n-n1;
+        let answer1 = n1.toString(2);
+        let answer2 = n2.toString(2);
+        while (n1>0){
+            tmp1 += (n1 +`& \\div 2 & = & ` + (n1/2|0) + ` & \\text{ あまり } ` + n1%2 + ` \\\\[0.2 em]
+            `);
+            n1=n1/2|0;
+        }
+        n1=n|0;
+        while (n2>0){
+            tmp2 += (n2 +`& \\times 2 & = & ` + n2*2 + ` & \\text{ 整数部分は } ` + (n2*2|0) + ` \\\\[0.2 em]
+            `);
+            n2=(n2*2)-(n2*2|0);
+        }
+        n2=n-n1;
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\text{まず、整数部分 } ` + n1 + `\\text{ と小数点以下 }` + n2 + `\\text{ とで分けて考える}\\\\
+        $$
+        $$
+        \\begin{eqnarray*}
+        \\text{整数部分について }\\\\
+        ` + tmp1 + `
+        &&&&&\\text{商が0になったため計算終了}\\\\
+        \\end{eqnarray*}
+        $$
+        $$
+        \\begin{eqnarray*}
+        \\text{小数点以下について }\\\\
+        ` + tmp2 + `
+        &&&&&\\text{積が1になったため計算終了}\\\\
+        \\end{eqnarray*}
+        $$
+        $$
+        \\begin{eqnarray*}
+        \\text{整数部分の計算について、あまりを下から上に並べると、} ` + answer1 + `\\\\
+        \\text{小数点以下の計算について、整数部分を上に並べると、} ` + answer2 + `\\\\
+        \\text{すなわち、} ` + answer + `
+        \\end{eqnarray*}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,3);
+    }
+</script>
+</html>
