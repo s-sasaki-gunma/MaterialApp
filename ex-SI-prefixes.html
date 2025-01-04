@@ -14,27 +14,33 @@
     <main>
         <section class="PEE">
             <h2>確認事項</h2>
-            <p>xxxxx</p>
+            <p>
+                　接頭語（接頭辞）は、大きな数値を表す際に単位の前に付けることでその値を短く表記するために用いられる。
+                例えば、$35000m$は$35km$のように短く表記できる。<br>
+                　日常生活では、$10^3(=1000)$倍毎に単位が定められた「SI接頭語」が常用される。
+                一方で、情報量である$bit$や$Byte$を対象としたときには、$2^{10}(=1024)$倍毎に単位が定められた「2進接頭辞」が用いられる。<br>
+                　慣例的に$bit$や$Byte$に対してSI接頭語が用いられることも多いため、どちらが用いられているかは注意書き等をよく読むようにしましょう。
+            </p>
             <hr>
-            <p>次の計算式で求められる。</p>
+            <p>接頭語（接頭辞）と値の関係は次の対応表に示す。</p>
             <p>$$
-            \begin{array}{lccr}
-            接頭語&読み方&SI&\\
-            K&キロ&10^{3}&1,000\\
-            M&メガ&10^{6}&1,000,000\\
-            G&ギガ&10^{9}&1,000,000,000\\
-            T&テラ&10^{12}&1,000,000,000,000\\
-            P&ペタ&10^{15}&1,000,000,000,000,000\\
-            E&エクサ&10^{18}&1,000,000,000,000,000,000\\
-            Z&ゼタ&10^{21}&1,000,000,000,000,000,000,000\\
-            Y&ヨタ&10^{24}&1,000,000,000,000,000,000,000,000\\
+            \begin{array}{rclrcl}
+            SI接頭語&読み方&値（10の冪乗）&2進接頭辞&読み方&値（2の冪乗）\\
+            K&キロ  &10^{3} & Ki&キビ&2^{10}\\
+            M&メガ  &10^{6} & Mi&メビ&2^{20}\\
+            G&ギガ  &10^{9} & Gi&ギビ&2^{30}\\
+            T&テラ  &10^{12}& Ti&テビ&2^{40}\\
+            P&ペタ  &10^{15}& Pi&ペビ&2^{50}\\
+            E&エクサ&10^{18}& Ei&エクスビ&2^{60}\\
+            Z&ゼタ  &10^{21}& Zi&ゼビ&2^{70}\\
+            Y&ヨタ  &10^{24}& Yi&ヨビ&2^{80}\\
             \end{array}
             $$</p>
         </section>
     </main>
 </body>
 <script>
-    createExercises(1);
+    createExercises(2);
 
     function createQuestion1(){
         let n = Math.floor(Math.random() * 1250)*8;
@@ -53,7 +59,7 @@
         else if(r0==8) { r1 = "\\times 8"; }
         let answer = n*10**(a3-b3)*r0;
         let questionEle = document.createElement("p");
-        questionEle.innerText = "$ " + n + " \\text{ " + a1+a2 + " }$ は何 $ \\text{ " + b1+b2 + " } $ であるか答えよ";
+        questionEle.innerText = "$ " + n + " \\text{ " + a1+a2 + " }$ は何 $ \\text{ " + b1+b2 + " } $ であるか答えよ（接頭語はSI接頭語である）";
         let explanationEle = document.createElement("p");
         explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
         $$
@@ -63,6 +69,35 @@
         \\end{eqnarray*}
         $$`;
         createQuestion(answer,questionEle,explanationEle,1);
+    }
+
+    function createQuestion2(){
+        let n = Math.floor(Math.random() * 1250)*8;
+        let IEC = ["","Ki","Mi","Gi","Ti","Pi","Ei"];
+        let BI = ["bit","B"];
+        let a1 = IEC.splice(Math.floor(Math.random()*IEC.length),1)[0];
+        let a2 = BI[Math.floor(Math.random()*2)];
+        let b1 = IEC.splice(Math.floor(Math.random()*IEC.length),1)[0];
+        let b2 = BI[Math.floor(Math.random()*2)];
+        IEC = ["","Ki","Mi","Gi","Ti","Pi","Ei"];
+        let a3=IEC.indexOf(a1);
+        let b3=IEC.indexOf(b1);
+        let r0=8**(BI.indexOf(a2)-BI.indexOf(b2));
+        let r1 = "\\times \\dfrac{1}{8}";
+        if(r0==1) { r1 = ""; }
+        else if(r0==8) { r1 = "\\times 8"; }
+        let answer = n*1024**(a3-b3)*r0;
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "$ " + n + " \\text{ " + a1+a2 + " }$ は何 $ \\text{ " + b1+b2 + " } $ であるか答えよ（接頭辞は2進接頭辞である）";
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{eqnarray*}
+        `+ n +` \\text{ ` + a1+a2 + ` } &=& `+ n + r1 +`\\times \\dfrac{ 1024^{` + a3 + `}}{ 1024^{` + b3 + `}}\\text{ ` + b1+b2 + ` } \\\\[1em]
+        &=& ` + answer.toFixed(Math.max(0,b3-a3)) + `\\text{ ` + b1+b2 + ` } \\\\[1em]
+        \\end{eqnarray*}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,2);
     }
 </script>
 </html>

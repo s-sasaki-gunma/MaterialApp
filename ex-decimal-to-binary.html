@@ -14,14 +14,22 @@
     <main>
         <section class="PEE">
             <h2>確認事項</h2>
-            <p>xxxxx</p>
+            <p>10進数から2進数への変換は、変換したい10進数の数値を0になるまで2で整数除算し続け、除算で出た余りの0と1を並べることで求められる。</p>
             <hr>
-            <p>10進数から2進数への変換は、次の計算式で求められる。</p>
+            <p>例）10進数の「23」を2進数の「10111」に変換する手順</p>
             <p>$$
             \begin{eqnarray*}
-            1 \text{ Byte} &=& 8 \text{ bit}\\
-            n \text{ Byte} &=& 8n \text{ bit}
+            23 \div 2 &=& 11 \text{ あまり } 1\\
+            11 \div 2 &=&  5 \text{ あまり } 1\\
+             5 \div 2 &=&  2 \text{ あまり } 1\\
+             2 \div 2 &=&  1 \text{ あまり } 0\\
+             1 \div 2 &=&  0 \text{ あまり } 1\\
             \end{eqnarray*}
+            $$
+            $$
+            %\begin{eqnarray*}
+            \text{あまり部分を下から上に並べると、} 10111
+            %\end{eqnarray*}
             $$</p>
         </section>
     </main>
