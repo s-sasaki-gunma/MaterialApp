@@ -84,26 +84,17 @@ h2::after {
   padding-left: 3vw;
   box-sizing:border-box;
 }
-.index li:hover::after {
-  position: absolute;
-  content: '';
-  width: 1.5vw;
-  height: 0.5vw;
-  top: 0;
-  left: 0;
-  border-left: 2px solid #40477e;
-  border-bottom:  2px solid #40477e;
-  transform: rotate(-45deg);
-}
 .index li:before {
+  content: "▶";
   position: absolute;
-  content: '';
-  top: 0;
-  left: 0;
-  width: 1.5vw;
-  height: 1.5vw;
-  border: 2px solid #ccc;
+  left : 1vw;
+  color: #5fff5f;
 }
+li a {
+  display: block; 
+  width: 100%;
+}
+li a:hover { font-weight: bold; }
 
 .AA {
   background-color: #f6f6f6;
