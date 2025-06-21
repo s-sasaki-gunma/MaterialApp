@@ -73,7 +73,7 @@
         let carry=1,answer=1;
         while(Number.isInteger(answer)){
             carry = 2**Math.floor(1+Math.random() * 4);
-            answer = Math.floor((1+Math.random()) * carry*carry) / carry;
+            answer = (2 * Math.floor((1+Math.random()) * carry*carry) + 1) / carry;
         }
         let n = Number.parseFloat(answer.toString(2),10);
         let carry2 = Number.parseInt(carry.toString(2),10);
