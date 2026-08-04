@@ -24,25 +24,25 @@
             color: #0f172a;
         }
 
-        .border-primary-red { border-color: #ff0000; }
-        .bg-primary-red { background-color: #ff0000; }
-        .text-primary-red { color: #ff0000; }
+        .border-primary-red { border-color: #ef4444; }
+        .bg-primary-red { background-color: #ef4444; }
+        .text-primary-red { color: #ef4444; }
 
-        .border-primary-blue { border-color: #0055ff; }
-        .bg-primary-blue { background-color: #0055ff; }
-        .text-primary-blue { color: #0055ff; }
+        .border-primary-blue { border-color: #0284c7; }
+        .bg-primary-blue { background-color: #0284c7; }
+        .text-primary-blue { color: #0284c7; }
 
-        .border-primary-green { border-color: #00cc44; }
-        .bg-primary-green { background-color: #00cc44; }
-        .text-primary-green { color: #00cc44; }
+        .border-primary-green { border-color: #10b981; }
+        .bg-primary-green { background-color: #10b981; }
+        .text-primary-green { color: #10b981; }
 
-        .border-primary-yellow { border-color: #ffcc00; }
-        .bg-primary-yellow { background-color: #ffcc00; }
-        .text-primary-yellow { color: #cc9900; }
+        .border-primary-yellow { border-color: #f59e0b; }
+        .bg-primary-yellow { background-color: #f59e0b; }
+        .text-primary-yellow { color: #d97706; }
 
         @keyframes pulse-fast {
             0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.08); }
+            50% { opacity: 0.4; transform: scale(1.1); }
         }
         .animate-pulse-fast {
             animation: pulse-fast 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -108,17 +108,14 @@
             title: 'パターンB: 3階建て校舎階層型ネットワーク',
             description: '各階（1F/2F/3F）にフロアスイッチが設置され、1Fのコアスイッチへ集約される階層型トポロジ。',
             nodes: [
-                // 3階
                 { id: 'pc3f', name: '3F 理科室PC', ip: '10.0.3.11', type: 'pc', x: 100, y: 70, icon: 'fa-desktop' },
                 { id: 'pcLib', name: '3F 図書室PC', ip: '10.0.3.21', type: 'pc', x: 250, y: 70, icon: 'fa-desktop' },
                 { id: 'hub3f', name: '3F フロアスイッチ', type: 'hub', x: 180, y: 160, icon: 'fa-box' },
 
-                // 2階
                 { id: 'tab2f', name: '2F 学級タブレット', ip: '10.0.2.15', type: 'tablet', x: 550, y: 70, icon: 'fa-tablet-screen-button' },
                 { id: 'pcStaff', name: '2F 職員室PC', ip: '10.0.2.50', type: 'pc', x: 700, y: 70, icon: 'fa-laptop' },
                 { id: 'hub2f', name: '2F フロアスイッチ', type: 'hub', x: 625, y: 160, icon: 'fa-box' },
 
-                // 1階（コア）
                 { id: 'hubCore', name: '1F コアスイッチ', type: 'hub', x: 400, y: 260, icon: 'fa-boxes-stacked' },
                 { id: 'hub1f', name: '1F 事務用スイッチ', type: 'hub', x: 220, y: 370, icon: 'fa-box' },
                 { id: 'pcAdmin', name: '1F 事務室PC', ip: '10.0.1.10', type: 'pc', x: 90, y: 370, icon: 'fa-desktop' },
@@ -148,20 +145,16 @@
             title: 'パターンC: 部門別オフィスネットワーク (スター型拡張)',
             description: '営業部・開発部・総務部がそれぞれの部門スイッチを介して基幹コアスイッチ・各種サーバーと接続する構成。',
             nodes: [
-                // 上部 サーバー群
                 { id: 'srvFile', name: 'ファイルサーバー', ip: '172.16.1.10', type: 'server', x: 280, y: 70, icon: 'fa-server' },
                 { id: 'srvWeb', name: '社内Webサーバー', ip: '172.16.1.20', type: 'server', x: 520, y: 70, icon: 'fa-server' },
 
-                // 中央 コアスイッチ & ルータ
                 { id: 'hubCore', name: '社内コアスイッチ', type: 'hub', x: 400, y: 190, icon: 'fa-boxes-stacked' },
                 { id: 'router', name: 'ゲートウェイルータ', ip: '172.16.0.1', type: 'router', x: 180, y: 190, icon: 'fa-network-wired' },
 
-                // 下部 部門スイッチ
                 { id: 'hubSales', name: '営業部ハブ', type: 'hub', x: 150, y: 320, icon: 'fa-box' },
                 { id: 'hubDev', name: '開発部ハブ', type: 'hub', x: 400, y: 320, icon: 'fa-box' },
                 { id: 'hubAdmin', name: '総務部ハブ', type: 'hub', x: 650, y: 320, icon: 'fa-box' },
 
-                // クライアント端末
                 { id: 'pcSales1', name: '営業PC 1', ip: '172.16.10.1', type: 'pc', x: 80, y: 440, icon: 'fa-laptop' },
                 { id: 'pcSales2', name: '営業PC 2', ip: '172.16.10.2', type: 'pc', x: 220, y: 440, icon: 'fa-desktop' },
                 { id: 'pcDev', name: '開発者端末', ip: '172.16.20.1', type: 'pc', x: 330, y: 440, icon: 'fa-laptop' },
@@ -187,7 +180,7 @@
 
         const topologyList = [topologyPattern1, topologyPattern2, topologyPattern3];
 
-        // BFS（幅優先探索）で最短通信経路を算出
+        // BFS（幅優先探索）で完全な送信経路を算出
         function findPath(startId, endId, edges) {
             if (!startId || !endId) return null;
             const adj = {};
@@ -217,18 +210,20 @@
             return null;
         }
 
-        // 指定したノードが故障している場合のPing判定処理
-        function checkPing(startId, endId, failedNodeId, edges) {
-            const path = findPath(startId, endId, edges);
-            if (!path) return { success: false, path: [] };
+        // 指定したノードが故障している場合のPing判定処理（全経路情報を含む）
+        function checkPingDetails(startId, endId, failedNodeId, edges) {
+            const fullPath = findPath(startId, endId, edges);
+            if (!fullPath) return { success: false, fullPath: [], failedIndex: -1, reachablePath: [] };
 
-            const failedIndex = path.indexOf(failedNodeId);
+            const failedIndex = fullPath.indexOf(failedNodeId);
             const isBlocked = failedIndex !== -1;
-            const displayPath = isBlocked ? path.slice(0, failedIndex + 1) : path;
+            const reachablePath = isBlocked ? fullPath.slice(0, failedIndex + 1) : fullPath;
 
             return {
                 success: !isBlocked,
-                path: displayPath
+                fullPath: fullPath,
+                failedIndex: failedIndex,
+                reachablePath: reachablePath
             };
         }
 
@@ -243,7 +238,7 @@
             const [pingLogs, setPingLogs] = React.useState([]);
             const [animatingPath, setAnimatingPath] = React.useState(null);
             const [animSuccess, setAnimSuccess] = React.useState(null);
-            const [hoveredLogPath, setHoveredLogPath] = React.useState(null);
+            const [hoveredLogInfo, setHoveredLogInfo] = React.useState(null);
             
             const [userSuspects, setUserSuspects] = React.useState([]);
             const [finalAnswer, setFinalAnswer] = React.useState('');
@@ -257,7 +252,6 @@
                 setTimeout(() => setToastMessage(''), 3500);
             };
 
-            // ネットワーク構成の更新＆状態初期化
             const applyTopology = (pattern, newFailedNode = null) => {
                 setActiveTopologyPattern(pattern);
                 setPingLogs([]);
@@ -265,9 +259,8 @@
                 setFinalAnswer('');
                 setUserSuspects([]);
                 setAnimatingPath(null);
-                setHoveredLogPath(null);
+                setHoveredLogInfo(null);
 
-                // デフォルトの送信元・宛先の設定
                 const pcs = pattern.nodes.filter(n => n.type === 'pc' || n.type === 'tablet');
                 const targets = pattern.nodes.filter(n => n.type === 'router' || n.type === 'server');
 
@@ -277,30 +270,23 @@
                 if (newFailedNode) {
                     setFailedNode(newFailedNode);
                 } else {
-                    // スイッチまたはルータの中からランダム選定
                     const switchable = pattern.nodes.filter(n => n.type === 'hub' || n.type === 'router').map(n => n.id);
                     const randomPick = switchable[Math.floor(Math.random() * switchable.length)];
                     setFailedNode(randomPick);
                 }
             };
 
-            // モード切替
             const switchMode = (newMode) => {
                 setMode(newMode);
-                if (newMode === 'exam') {
+                if (newMode === 'exam' || newMode === 'guide') {
                     setExamStep(1);
                     applyTopology(topologyPattern1, 'hubC');
                 } else if (newMode === 'challenge') {
-                    // 任意パターンを選定
                     applyTopology(topologyPattern2);
                     showToast('「実践チャレンジ」を開始しました。障害箇所を特定してください！');
-                } else if (newMode === 'guide') {
-                    setExamStep(1);
-                    applyTopology(topologyPattern1, 'hubC');
                 }
             };
 
-            // チャレンジ再シャッフル
             const resetChallenge = (patternToUse = activeTopologyPattern) => {
                 applyTopology(patternToUse);
                 showToast('新しい障害を発生させました！送信テストを行ってください。');
@@ -309,9 +295,9 @@
             const handleRunPing = (srcId = selectedSource, targetId = selectedTarget) => {
                 if (!srcId || !targetId || srcId === targetId) return;
 
-                const result = checkPing(srcId, targetId, failedNode, activeTopologyPattern.edges);
+                const result = checkPingDetails(srcId, targetId, failedNode, activeTopologyPattern.edges);
                 
-                setAnimatingPath(result.path);
+                setAnimatingPath(result.fullPath);
                 setAnimSuccess(result.success);
 
                 const srcNode = activeTopologyPattern.nodes.find(n => n.id === srcId);
@@ -342,7 +328,6 @@
                 }, 1800);
             };
 
-            // 実践チャレンジ用 クイック一括テスト
             const runQuickChallengeTests = () => {
                 const clientNodes = activeTopologyPattern.nodes.filter(n => n.type === 'pc' || n.type === 'tablet');
                 const destNodes = activeTopologyPattern.nodes.filter(n => n.type === 'router' || n.type === 'server');
@@ -355,7 +340,7 @@
                 ];
                 
                 const newLogs = testCases.map(t => {
-                    const res = checkPing(t.src, t.target, failedNode, activeTopologyPattern.edges);
+                    const res = checkPingDetails(t.src, t.target, failedNode, activeTopologyPattern.edges);
                     const srcNode = activeTopologyPattern.nodes.find(n => n.id === t.src);
                     const targetNode = activeTopologyPattern.nodes.find(n => n.id === t.target);
                     return {
@@ -373,7 +358,6 @@
                 showToast('初期簡易診断を実行しました。手がかりから原因を推論してください。');
             };
 
-            // 試作問題プリセットログ（表1再現）
             const loadExamPresetLogs = () => {
                 const presetTargets = [
                     { id: 'router', ip: '192.168.1.1' },
@@ -385,7 +369,7 @@
                 ];
 
                 const logs = presetTargets.map(t => {
-                    const res = checkPing('pcAud', t.id, failedNode, activeTopologyPattern.edges);
+                    const res = checkPingDetails('pcAud', t.id, failedNode, activeTopologyPattern.edges);
                     const targetNode = activeTopologyPattern.nodes.find(n => n.id === t.id);
                     return {
                         id: Math.random(),
@@ -403,17 +387,18 @@
             };
 
             const handleLogMouseEnter = (log) => {
-                const res = checkPing(log.sourceId, log.targetId, failedNode, activeTopologyPattern.edges);
-                if (res.path) {
-                    setHoveredLogPath({
-                        path: res.path,
+                const res = checkPingDetails(log.sourceId, log.targetId, failedNode, activeTopologyPattern.edges);
+                if (res.fullPath) {
+                    setHoveredLogInfo({
+                        fullPath: res.fullPath,
+                        failedIndex: res.failedIndex,
                         success: log.success
                     });
                 }
             };
 
             const handleLogMouseLeave = () => {
-                setHoveredLogPath(null);
+                setHoveredLogInfo(null);
             };
 
             const toggleSuspect = (nodeId) => {
@@ -434,11 +419,10 @@
 
             return (
                 <div className="min-h-screen flex flex-col">
-                    {/* ヘッダー */}
-                    <header className="bg-white border-b-4 border-primary-blue shadow-sm sticky top-0 z-50">
+                    <header className="bg-white border-b-4 border-sky-600 shadow-sm sticky top-0 z-50">
                         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
                             <div className="flex items-center gap-3">
-                                <div className="bg-primary-blue text-white p-2.5 rounded-xl font-bold text-xl shadow-md">
+                                <div className="bg-sky-600 text-white p-2.5 rounded-xl font-bold text-xl shadow-md">
                                     <i className="fa-solid fa-network-wired"></i>
                                 </div>
                                 <div>
@@ -449,13 +433,12 @@
                                 </div>
                             </div>
 
-                            {/* モード切り替え */}
                             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 flex-wrap gap-1">
                                 <button
                                     onClick={() => switchMode('exam')}
                                     className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
                                         mode === 'exam'
-                                            ? 'bg-primary-blue text-white shadow-sm'
+                                            ? 'bg-sky-600 text-white shadow-sm'
                                             : 'text-slate-600 hover:text-slate-900'
                                     }`}
                                 >
@@ -466,7 +449,7 @@
                                     onClick={() => switchMode('challenge')}
                                     className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
                                         mode === 'challenge'
-                                            ? 'bg-primary-red text-white shadow-sm'
+                                            ? 'bg-red-500 text-white shadow-sm'
                                             : 'text-slate-600 hover:text-slate-900'
                                     }`}
                                 >
@@ -477,7 +460,7 @@
                                     onClick={() => switchMode('guide')}
                                     className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
                                         mode === 'guide'
-                                            ? 'bg-primary-green text-white shadow-sm'
+                                            ? 'bg-emerald-600 text-white shadow-sm'
                                             : 'text-slate-600 hover:text-slate-900'
                                     }`}
                                 >
@@ -488,16 +471,13 @@
                         </div>
                     </header>
 
-                    {/* メインエリア */}
                     <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
                         
-                        {/* 左カラム：構成図＆操作 */}
                         <div className="lg:col-span-7 flex flex-col gap-6">
                             
-                            {/* シナリオ/パターンのカード */}
                             {mode === 'exam' && (
-                                <div className="bg-white rounded-2xl p-5 border-2 border-primary-blue shadow-sm">
-                                    <div className="flex items-center gap-2 mb-2 text-primary-blue font-bold text-base">
+                                <div className="bg-white rounded-2xl p-5 border-2 border-sky-600 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-2 text-sky-600 font-bold text-base">
                                         <i className="fa-solid fa-circle-info text-lg"></i>
                                         <span>【試作問題シナリオ】視聴覚室からの通信不良を解決せよ！</span>
                                     </div>
@@ -510,15 +490,15 @@
                                         {examStep === 1 && (
                                             <button
                                                 onClick={loadExamPresetLogs}
-                                                className="bg-primary-blue hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm shadow transition-all flex items-center gap-2"
+                                                className="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm shadow transition-all flex items-center gap-2"
                                             >
                                                 <i className="fa-solid fa-play"></i>
                                                 ステップ1: 視聴覚室からの疎通テスト結果を表示（表1再現）
                                             </button>
                                         )}
                                         {examStep >= 2 && (
-                                            <div className="bg-blue-50 border border-blue-200 text-blue-900 text-xs p-3 rounded-xl font-medium w-full">
-                                                <i className="fa-solid fa-lightbulb text-primary-yellow mr-1 text-sm"></i>
+                                            <div className="bg-sky-50 border border-sky-200 text-sky-900 text-xs p-3 rounded-xl font-medium w-full">
+                                                <i className="fa-solid fa-lightbulb text-amber-500 mr-1 text-sm"></i>
                                                 <b>切り分けヒント:</b> 視聴覚室からPC室(101)に届くため<b>スイッチD, E, Fは正常</b>です。故障候補は<b>スイッチC</b>か<b>スイッチA</b>に絞られます！<br/>
                                                 送信元を<b>「1年1組 タブレット」</b>、宛先を<b>「サーバー1 (192.168.1.11)」</b>に設定してPingを実行してください。
                                             </div>
@@ -528,9 +508,9 @@
                             )}
 
                             {mode === 'challenge' && (
-                                <div className="bg-white rounded-2xl p-5 border-2 border-primary-red shadow-sm">
+                                <div className="bg-white rounded-2xl p-5 border-2 border-red-500 shadow-sm">
                                     <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                                        <div className="flex items-center gap-2 text-primary-red font-bold text-base">
+                                        <div className="flex items-center gap-2 text-red-500 font-bold text-base">
                                             <i className="fa-solid fa-triangle-exclamation text-lg"></i>
                                             <span>【実践トレーニング】構成図の選択 & 障害特定</span>
                                         </div>
@@ -542,7 +522,6 @@
                                         </button>
                                     </div>
 
-                                    {/* パターン選択 */}
                                     <div className="mb-3">
                                         <label className="block text-xs font-bold text-slate-600 mb-1">
                                             ネットワーク構成パターンの選択：
@@ -553,7 +532,7 @@
                                                 const found = topologyList.find(p => p.id === e.target.value);
                                                 if (found) applyTopology(found);
                                             }}
-                                            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-primary-red focus:outline-none"
+                                            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-red-500 focus:outline-none"
                                         >
                                             {topologyList.map(topo => (
                                                 <option key={topo.id} value={topo.id}>{topo.title}</option>
@@ -567,47 +546,45 @@
 
                                     <button
                                         onClick={runQuickChallengeTests}
-                                        className="bg-primary-red hover:bg-red-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow flex items-center gap-1.5"
+                                        className="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow flex items-center gap-1.5"
                                     >
                                         <i className="fa-solid fa-stethoscope"></i> クイック一括診断を実行 (手がかりを得る)
                                     </button>
                                 </div>
                             )}
 
-                            {/* トースト通知 */}
                             {toastMessage && (
                                 <div className="bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg animate-bounce flex items-center gap-2">
-                                    <i className="fa-solid fa-bell text-primary-yellow"></i>
+                                    <i className="fa-solid fa-bell text-amber-400"></i>
                                     <span>{toastMessage}</span>
                                 </div>
                             )}
 
-                            {/* SVG Network Diagram */}
-                            {}
                             <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col items-center">
-                                <div className="w-full flex justify-between items-center mb-2 px-2">
-                                    <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
-                                        <i className="fa-solid fa-sitemap text-primary-blue"></i>
+                                <div className="w-full flex justify-between items-center mb-2 px-2 flex-wrap gap-2">
+                                    <span className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
+                                        <i className="fa-solid fa-sitemap text-sky-600"></i>
                                         {activeTopologyPattern.title}
                                     </span>
-                                    <div className="flex gap-3 text-xs font-bold">
+                                    <div className="flex gap-3 text-[11px] font-bold">
                                         <span className="flex items-center gap-1 text-slate-600">
-                                            <span className="w-3 h-3 rounded-full bg-slate-300 inline-block"></span> 機器
+                                            <span className="w-3 h-1 bg-sky-500 inline-block rounded"></span> 正常経路
                                         </span>
-                                        <span className="flex items-center gap-1 text-primary-red">
-                                            <span className="w-3 h-3 rounded-full bg-primary-red inline-block"></span> 容疑候補
+                                        <span className="flex items-center gap-1 text-red-500">
+                                            <span className="w-3 h-1 bg-red-500 inline-block rounded"></span> 不通/途絶区間
                                         </span>
                                     </div>
                                 </div>
 
                                 <div className="w-full relative overflow-x-auto">
                                     <svg viewBox="0 0 800 500" className="w-full h-auto min-w-[650px] select-none">
-                                        {/* エッジ（配線） */}
+                                        {/* エッジ（配線）描画 */}
                                         {activeTopologyPattern.edges.map((edge, idx) => {
                                             const n1 = activeTopologyPattern.nodes.find(n => n.id === edge.from);
                                             const n2 = activeTopologyPattern.nodes.find(n => n.id === edge.to);
                                             if (!n1 || !n2) return null;
                                             
+                                            // アニメーション用
                                             let isAnimated = false;
                                             if (animatingPath) {
                                                 for (let i = 0; i < animatingPath.length - 1; i++) {
@@ -621,17 +598,18 @@
                                                 }
                                             }
 
-                                            let isHoveredPath = false;
-                                            let hoverSuccess = false;
-                                            if (hoveredLogPath && hoveredLogPath.path) {
-                                                const p = hoveredLogPath.path;
+                                            // ホバー時の全経路判定
+                                            let isHoveredEdge = false;
+
+                                            if (hoveredLogInfo && hoveredLogInfo.fullPath) {
+                                                const p = hoveredLogInfo.fullPath;
+
                                                 for (let i = 0; i < p.length - 1; i++) {
                                                     if (
                                                         (p[i] === edge.from && p[i+1] === edge.to) ||
                                                         (p[i] === edge.to && p[i+1] === edge.from)
                                                     ) {
-                                                        isHoveredPath = true;
-                                                        hoverSuccess = hoveredLogPath.success;
+                                                        isHoveredEdge = true;
                                                         break;
                                                     }
                                                 }
@@ -639,13 +617,23 @@
 
                                             let strokeColor = '#cbd5e1';
                                             let strokeWidth = '2.5';
+                                            let strokeDash = 'none';
 
-                                            if (isHoveredPath) {
-                                                strokeColor = hoverSuccess ? '#00cc44' : '#ff0000';
-                                                strokeWidth = '5';
+                                            if (isHoveredEdge) {
+                                                if (hoveredLogInfo.success) {
+                                                    strokeColor = '#10b981'; // 全線成功：緑
+                                                    strokeWidth = '5';
+                                                } else {
+                                                    strokeColor = '#ef4444'; // 失敗時：手前も含め全区間赤点線
+                                                    strokeWidth = '5';
+                                                    strokeDash = '6,4';
+                                                }
                                             } else if (isAnimated) {
-                                                strokeColor = animSuccess ? '#00cc44' : '#ff0000';
+                                                strokeColor = animSuccess ? '#10b981' : '#ef4444';
                                                 strokeWidth = '4';
+                                                if (!animSuccess) {
+                                                    strokeDash = '6,4';
+                                                }
                                             }
 
                                             return (
@@ -657,6 +645,7 @@
                                                         y2={n2.y}
                                                         stroke={strokeColor}
                                                         strokeWidth={strokeWidth}
+                                                        strokeDasharray={strokeDash}
                                                         className="transition-all duration-200"
                                                     />
                                                     {isAnimated && (
@@ -665,7 +654,7 @@
                                                             y1={n1.y}
                                                             x2={n2.x}
                                                             y2={n2.y}
-                                                            stroke={animSuccess ? '#00cc44' : '#ff0000'}
+                                                            stroke={animSuccess ? '#10b981' : '#ef4444'}
                                                             strokeWidth="4"
                                                             className="animate-packet"
                                                         />
@@ -674,12 +663,43 @@
                                             );
                                         })}
 
-                                        {/* ノード（機器） */}
+                                        {/* ノード（機器）描画 */}
                                         {activeTopologyPattern.nodes.map((node) => {
                                             const isSelectedSrc = selectedSource === node.id;
                                             const isSelectedTarget = selectedTarget === node.id;
                                             const isSuspect = userSuspects.includes(node.id);
                                             const isHub = node.type === 'hub' || node.type === 'router';
+
+                                            // ホバー時のノード状態判定（故障箇所の個別強調を排除し、経路全体を均一に強調）
+                                            let isHoveredNode = false;
+
+                                            if (hoveredLogInfo && hoveredLogInfo.fullPath) {
+                                                if (hoveredLogInfo.fullPath.includes(node.id)) {
+                                                    isHoveredNode = true;
+                                                }
+                                            }
+
+                                            let circleBg = '#ffffff';
+                                            let circleStroke = '#94a3b8';
+                                            let strokeW = '2';
+
+                                            if (isHoveredNode) {
+                                                circleBg = hoveredLogInfo.success ? '#d1fae5' : '#fef2f2';
+                                                circleStroke = hoveredLogInfo.success ? '#10b981' : '#f87171';
+                                                strokeW = '3.5';
+                                            } else if (isSuspect) {
+                                                circleBg = '#fee2e2';
+                                                circleStroke = '#ef4444';
+                                                strokeW = '3';
+                                            } else if (isSelectedSrc) {
+                                                circleBg = '#e0f2fe';
+                                                circleStroke = '#0284c7';
+                                                strokeW = '3';
+                                            } else if (isSelectedTarget) {
+                                                circleBg = '#d1fae5';
+                                                circleStroke = '#10b981';
+                                                strokeW = '3';
+                                            }
 
                                             return (
                                                 <g 
@@ -701,20 +721,20 @@
                                                     }}
                                                 >
                                                     {isSuspect && (
-                                                        <circle r="28" fill="#ff0000" opacity="0.15" className="animate-pulse-fast" />
+                                                        <circle r="28" fill="#ef4444" opacity="0.2" className="animate-pulse-fast" />
                                                     )}
 
                                                     <circle
                                                         r="21"
-                                                        fill={isSelectedSrc ? '#e0f2fe' : isSelectedTarget ? '#dcfce7' : isSuspect ? '#fee2e2' : '#ffffff'}
-                                                        stroke={isSuspect ? '#ff0000' : isSelectedSrc ? '#0055ff' : isSelectedTarget ? '#00cc44' : '#94a3b8'}
-                                                        strokeWidth={isSuspect || isSelectedSrc || isSelectedTarget ? '3' : '2'}
+                                                        fill={circleBg}
+                                                        stroke={circleStroke}
+                                                        strokeWidth={strokeW}
                                                     />
 
                                                     <foreignObject x="-14" y="-14" width="28" height="28">
                                                         <div className="w-full h-full flex items-center justify-center text-slate-700 text-sm">
                                                             <i className={`fa-solid ${node.icon} ${
-                                                                isSuspect ? 'text-primary-red' : isSelectedSrc ? 'text-primary-blue' : isSelectedTarget ? 'text-primary-green' : ''
+                                                                isSuspect ? 'text-red-500' : isSelectedSrc ? 'text-sky-600' : isSelectedTarget ? 'text-emerald-600' : ''
                                                             }`}></i>
                                                         </div>
                                                     </foreignObject>
@@ -730,7 +750,7 @@
 
                                                     {isSuspect && (
                                                         <foreignObject x="10" y="-24" width="20" height="20">
-                                                            <div className="bg-primary-red text-white text-[10px] font-black rounded-full w-5 h-5 flex items-center justify-center shadow">
+                                                            <div className="bg-red-500 text-white text-[10px] font-black rounded-full w-5 h-5 flex items-center justify-center shadow">
                                                                 ?
                                                             </div>
                                                         </foreignObject>
@@ -740,23 +760,22 @@
                                         })}
                                     </svg>
                                 </div>
-                                <p className="text-[11px] text-slate-400 mt-1">
-                                    ※中継機器（ハブ/ルータ）クリックで<b>故障候補(?)</b>マーク。端末クリックで<b>送信元/宛先</b>指定。
+                                <p className="text-[11px] text-slate-500 mt-1">
+                                    ※ログにマウスカーソルを合わせると、<b>対象の全通信経路（応答なしの場合は全区間赤点線）</b>が表示されます。
                                 </p>
                             </div>
 
-                            {/* Ping実行制御パネル */}
                             <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-4">
                                 <div className="flex-1 grid grid-cols-2 gap-3 w-full">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-600 mb-1">
-                                            <i className="fa-solid fa-paper-plane text-primary-blue mr-1"></i>
+                                            <i className="fa-solid fa-paper-plane text-sky-600 mr-1"></i>
                                             送信元端末
                                         </label>
                                         <select
                                             value={selectedSource || ''}
                                             onChange={(e) => setSelectedSource(e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-primary-blue focus:outline-none"
+                                            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-sky-600 focus:outline-none"
                                         >
                                             {activeTopologyPattern.nodes.map(n => (
                                                 <option key={n.id} value={n.id}>
@@ -768,13 +787,13 @@
 
                                     <div>
                                         <label className="block text-xs font-bold text-slate-600 mb-1">
-                                            <i className="fa-solid fa-bullseye text-primary-green mr-1"></i>
+                                            <i className="fa-solid fa-bullseye text-emerald-600 mr-1"></i>
                                             宛先端末/機器
                                         </label>
                                         <select
                                             value={selectedTarget || ''}
                                             onChange={(e) => setSelectedTarget(e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-primary-green focus:outline-none"
+                                            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-600 focus:outline-none"
                                         >
                                             {activeTopologyPattern.nodes.map(n => (
                                                 <option key={n.id} value={n.id}>
@@ -787,7 +806,7 @@
 
                                 <button
                                     onClick={() => handleRunPing()}
-                                    className="w-full md:w-auto bg-primary-blue hover:bg-blue-600 active:scale-95 text-white font-black px-6 py-3 rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                                    className="w-full md:w-auto bg-sky-600 hover:bg-sky-700 active:scale-95 text-white font-black px-6 py-3 rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2 whitespace-nowrap"
                                 >
                                     <i className="fa-solid fa-bolt"></i>
                                     疎通テスト (Ping) 実行
@@ -796,15 +815,12 @@
 
                         </div>
 
-                        {/* 右カラム：ログ & 回答 */}
-                        {}
                         <div className="lg:col-span-5 flex flex-col gap-6">
                             
-                            {/* ログ一覧 */}
                             <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col min-h-[440px]">
                                 <div className="flex justify-between items-center mb-3">
                                     <h3 className="font-black text-slate-800 text-sm flex items-center gap-2">
-                                        <i className="fa-solid fa-list-check text-primary-blue"></i>
+                                        <i className="fa-solid fa-list-check text-sky-600"></i>
                                         疎通テスト (Ping) 結果ログ
                                     </h3>
                                     <span className="text-xs bg-slate-100 text-slate-600 font-bold px-2.5 py-1 rounded-full">
@@ -843,11 +859,11 @@
                                                         </td>
                                                         <td className="p-2.5 text-center">
                                                             {log.success ? (
-                                                                <span className="inline-flex items-center gap-1 bg-green-100 text-primary-green px-2 py-0.5 rounded-full font-bold text-[11px]">
+                                                                <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold text-[11px]">
                                                                     <i className="fa-solid fa-circle-check"></i> 成功 (○)
                                                                 </span>
                                                             ) : (
-                                                                <span className="inline-flex items-center gap-1 bg-red-100 text-primary-red px-2 py-0.5 rounded-full font-bold text-[11px]">
+                                                                <span className="inline-flex items-center gap-1 bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold text-[11px]">
                                                                     <i className="fa-solid fa-circle-xmark"></i> 応答なし (×)
                                                                 </span>
                                                             )}
@@ -860,11 +876,10 @@
                                 </div>
                             </div>
 
-                            {/* 回答入力 */}
-                            <div className="bg-white rounded-2xl p-5 border-2 border-primary-yellow shadow-sm flex flex-col gap-4">
+                            <div className="bg-white rounded-2xl p-5 border-2 border-amber-500 shadow-sm flex flex-col gap-4">
                                 <div>
                                     <h3 className="font-black text-slate-800 text-base flex items-center gap-2">
-                                        <i className="fa-solid fa-magnifying-glass-location text-primary-yellow"></i>
+                                        <i className="fa-solid fa-magnifying-glass-location text-amber-500"></i>
                                         故障原因機器の特定・回答
                                     </h3>
                                     <p className="text-xs text-slate-600 mt-1">
@@ -879,7 +894,7 @@
                                     <select
                                         value={finalAnswer}
                                         onChange={(e) => setFinalAnswer(e.target.value)}
-                                        className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl p-3 text-sm font-bold text-slate-800 focus:border-primary-blue focus:outline-none"
+                                        className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl p-3 text-sm font-bold text-slate-800 focus:border-sky-600 focus:outline-none"
                                     >
                                         <option value="">-- 機器を選択してください --</option>
                                         {activeTopologyPattern.nodes
@@ -896,7 +911,7 @@
                                     disabled={!finalAnswer}
                                     className={`w-full font-black py-3 rounded-xl text-sm shadow transition-all flex items-center justify-center gap-2 ${
                                         finalAnswer 
-                                            ? 'bg-primary-yellow text-slate-900 hover:bg-yellow-400 cursor-pointer active:scale-98' 
+                                            ? 'bg-amber-500 text-slate-900 hover:bg-amber-400 cursor-pointer active:scale-98' 
                                             : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                                     }`}
                                 >
@@ -907,18 +922,18 @@
                                 {quizResult && (
                                     <div className={`p-4 rounded-xl border-2 ${
                                         quizResult.correct 
-                                            ? 'bg-green-50 border-primary-green text-green-900' 
-                                            : 'bg-red-50 border-primary-red text-red-900'
+                                            ? 'bg-emerald-50 border-emerald-500 text-emerald-900' 
+                                            : 'bg-red-50 border-red-500 text-red-900'
                                     }`}>
                                         <div className="flex items-center gap-2 font-black text-base mb-1">
                                             {quizResult.correct ? (
                                                 <>
-                                                    <i className="fa-solid fa-circle-check text-primary-green text-xl"></i>
+                                                    <i className="fa-solid fa-circle-check text-emerald-600 text-xl"></i>
                                                     <span>正解！見事な推論です！</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <i className="fa-solid fa-circle-xmark text-primary-red text-xl"></i>
+                                                    <i className="fa-solid fa-circle-xmark text-red-500 text-xl"></i>
                                                     <span>不正解... もう一度見直しましょう</span>
                                                 </>
                                             )}
@@ -938,19 +953,18 @@
 
                     </main>
 
-                    {/* ガイドモード */}
                     {mode === 'guide' && (
                         <div className="max-w-7xl w-full mx-auto p-4 md:p-6">
-                            <div className="bg-white rounded-2xl p-6 border-2 border-primary-green shadow-md">
+                            <div className="bg-white rounded-2xl p-6 border-2 border-emerald-500 shadow-md">
                                 <h2 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
-                                    <i className="fa-solid fa-graduation-cap text-primary-green text-2xl"></i>
+                                    <i className="fa-solid fa-graduation-cap text-emerald-600 text-2xl"></i>
                                     共通テスト第7問 「不具合原因の究明」解法ロジック完全解説
                                 </h2>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     
                                     <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                                        <h3 className="font-bold text-base text-primary-blue mb-2 flex items-center gap-2">
+                                        <h3 className="font-bold text-base text-sky-600 mb-2 flex items-center gap-2">
                                             <i className="fa-solid fa-1"></i>
                                             第1ステップ: 通信経路の切り分け
                                         </h3>
@@ -961,7 +975,7 @@
                                     </div>
 
                                     <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                                        <h3 className="font-bold text-base text-primary-red mb-2 flex items-center gap-2">
+                                        <h3 className="font-bold text-base text-red-500 mb-2 flex items-center gap-2">
                                             <i className="fa-solid fa-2"></i>
                                             第2ステップ: 決定的テストの場所選定
                                         </h3>
@@ -971,19 +985,19 @@
                                     </div>
 
                                     <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 md:col-span-2">
-                                        <h3 className="font-bold text-base text-primary-yellow mb-2 flex items-center gap-2">
+                                        <h3 className="font-bold text-base text-amber-600 mb-2 flex items-center gap-2">
                                             <i className="fa-solid fa-3"></i>
                                             判定結果の解釈
                                         </h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs mt-2">
-                                            <div className="bg-green-100 p-3 rounded-lg border border-green-300">
-                                                <div className="font-bold text-green-800">1年1組 → サーバー1 が「成功 (○)」の場合</div>
-                                                <p className="text-green-900 mt-1">
+                                            <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                                                <div className="font-bold text-emerald-800">1年1組 → サーバー1 が「成功 (○)」の場合</div>
+                                                <p className="text-emerald-900 mt-1">
                                                     「タブレット」 → 「AP」 → 「スイッチB」 → 「スイッチA」 → 「サーバー」 が通信できました。つまり<b>スイッチAは正常</b>です！
                                                     よって故障原因は<b>スイッチC</b>だと確定します。
                                                 </p>
                                             </div>
-                                            <div className="bg-red-100 p-3 rounded-lg border border-red-300">
+                                            <div className="bg-red-50 p-3 rounded-lg border border-red-200">
                                                 <div className="font-bold text-red-800">1年1組 → サーバー1 が「応答なし (×)」の場合</div>
                                                 <p className="text-red-900 mt-1">
                                                     1年1組からもサーバーへ届かないため、<b>スイッチAが故障している</b>と確定します。
@@ -997,7 +1011,7 @@
                                 <div className="mt-6 text-center">
                                     <button
                                         onClick={() => switchMode('exam')}
-                                        className="bg-primary-blue hover:bg-blue-600 text-white font-black px-8 py-3 rounded-xl text-sm shadow-md transition"
+                                        className="bg-sky-600 hover:bg-sky-700 text-white font-black px-8 py-3 rounded-xl text-sm shadow-md transition"
                                     >
                                         シミュレータに戻って試す
                                     </button>
@@ -1006,7 +1020,6 @@
                         </div>
                     )}
 
-                    {/* フッター */}
                     <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 font-bold mt-auto">
                         高等学校学習指導要領「情報Ⅰ」ネットワークとトラブルシューティング 対応
                     </footer>
