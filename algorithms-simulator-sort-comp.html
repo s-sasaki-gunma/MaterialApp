@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ソートアルゴリズム比較シミュレータ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #ffffff;
+      color: #111827;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .bar {
+      transition: height 0.05s ease, background-color 0.05s ease;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 border-t-8 border-blue-600">
+  <div class="max-w-7xl mx-auto">
+    <!-- ヘッダー -->
+    <header class="mb-6 border-b pb-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold tracking-tight text-black">
+            <span class="text-blue-600">ソートアルゴリズム</span> 比較シミュレータ
+          </h1>
+          <p class="text-gray-600 text-sm mt-1">
+            高校情報科向け：全6種類のソート（バブル・選択・挿入・ヒープ・マージ・バケット）の「動き」と「効率」を可視化して学びましょう。
+          </p>
+        </div>
+        <!-- 凡例 (原色表記) -->
+        <div class="flex flex-wrap gap-3 text-xs font-bold border p-3 rounded-lg bg-gray-50">
+          <div class="flex items-center gap-1">
+            <span class="w-4 h-4 bg-blue-600 inline-block rounded-sm"></span> 未整列
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-4 h-4 bg-red-600 inline-block rounded-sm"></span> 比較中
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-4 h-4 bg-yellow-400 inline-block rounded-sm"></span> 入れ替え/移動中
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-4 h-4 bg-purple-500 inline-block rounded-sm"></span> 作業中/分割中
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-4 h-4 bg-green-600 inline-block rounded-sm"></span> 確定済み
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- コントロールパネル -->
+    <section class="bg-white border-2 border-gray-200 rounded-xl p-4 mb-8 shadow-sm">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-center">
+        <!-- 配列パターン選択 -->
+        <div>
+          <label for="arrayType" class="block text-sm font-bold text-gray-700 mb-1">
+            配列パターン:
+          </label>
+          <select id="arrayType" class="w-full border-2 border-gray-300 rounded-lg p-2 text-sm font-bold bg-white focus:border-blue-600 focus:outline-none cursor-pointer">
+            <option value="random">🎲 ランダム</option>
+            <option value="worst">🔻 最悪の場合 (降順)</option>
+            <option value="best">🔺 最良の場合 (昇順)</option>
+            <option value="custom">✏️ 任意の配列 (手入力)</option>
+          </select>
+        </div>
+
+        <!-- 要素数 N 設定 -->
+        <div>
+          <label for="arraySize" class="block text-sm font-bold text-gray-700 mb-1">
+            データ件数 N: <span id="arraySizeVal" class="text-blue-600 font-extrabold text-lg">30</span>
+          </label>
+          <input type="range" id="arraySize" min="10" max="80" value="30" class="w-full accent-blue-600 cursor-pointer">
+        </div>
+
+        <!-- 速度設定 -->
+        <div>
+          <label for="speed" class="block text-sm font-bold text-gray-700 mb-1">
+            実行速度: <span id="speedVal" class="text-blue-600 font-extrabold text-lg">普通</span>
+          </label>
+          <input type="range" id="speed" min="1" max="100" value="50" class="w-full accent-blue-600 cursor-pointer">
+        </div>
+
+        <!-- 全体操作ボタン -->
+        <div class="lg:col-span-2 flex flex-wrap gap-2 justify-end">
+          <button id="resetBtn" class="bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg shadow transition active:scale-95 flex items-center gap-1 text-sm">
+            🔄 再生成 / シャッフル
+          </button>
+          <button id="startAllBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg shadow transition active:scale-95 flex items-center gap-1 text-sm">
+            ▶ 6種一斉スタート
+          </button>
+          <button id="pauseBtn" class="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded-lg shadow transition active:scale-95 hidden text-sm">
+            ⏸ 一時停止
+          </button>
+        </div>
+      </div>
+
+      <!-- カスタム配列入力エリア（手入力時のみ表示） -->
+      <div id="customArrayContainer" class="mt-4 pt-3 border-t border-gray-200 hidden">
+        <label for="customArrayInput" class="block text-xs font-bold text-gray-700 mb-1">
+          任意の配列を入力（半角数字をカンマまたはスペース区切りで入力してください）:
+        </label>
+        <div class="flex gap-2">
+          <input type="text" id="customArrayInput" value="85, 20, 95, 10, 70, 40, 60, 30, 80, 50" placeholder="例: 10, 50, 30, 80, 20" class="flex-1 border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm font-mono focus:border-blue-600 focus:outline-none">
+          <button id="applyCustomBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-1.5 rounded-lg text-sm transition active:scale-95">
+            反映
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6つのアルゴリズム比較エリア -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      
+      <!-- 1. バブルソート -->
+      <div class="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-2 border-b pb-2">
+            <h2 class="text-xl font-bold text-blue-700">バブルソート</h2>
+            <div class="flex gap-1">
+              <button class="show-detail-btn bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded border border-blue-300 transition" data-algo="bubble">
+                📖 DNCL2
+              </button>
+              <button class="start-single-btn bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded hover:bg-blue-700" data-algo="bubble">
+                個別実行
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mb-3 min-h-[36px]">
+            隣り合う要素を比較し、順序が逆なら入れ替えます。最大値が泡のように右端へ移動します。
+          </p>
+
+          <!-- カウンター -->
+          <div class="grid grid-cols-2 gap-2 mb-3 text-center">
+            <div class="bg-gray-100 p-2 rounded border">
+              <div class="text-xs font-bold text-gray-500">比較回数</div>
+              <div id="bubbleComp" class="text-lg font-black text-red-600">0</div>
+            </div>
+            <div class="bg-gray-100 p-2 rounded border">
+              <div class="text-xs font-bold text-gray-500">入れ替え回数</div>
+              <div id="bubbleSwap" class="text-lg font-black text-yellow-600">0</div>
+            </div>
+          </div>
+
+          <!-- ビジュアル表示エリア -->
+          <div id="bubbleContainer" class="h-44 bg-gray-50 border border-gray-200 rounded-lg p-2 flex items-end justify-center gap-1 overflow-hidden">
+            <!-- バーがJSで挿入される -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 選択ソート -->
+      <div class="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-2 border-b pb-2">
+            <h2 class="text-xl font-bold text-blue-700">選択ソート</h2>
+            <div class="flex gap-1">
+              <button class="show-detail-btn bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded border border-blue-300 transition" data-algo="selection">
+                📖 DNCL2
+              </button>
+              <button class="start-single-btn bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded hover:bg-blue-700" data-algo="selection">
+                個別実行
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mb-3 min-h-[36px]">
+            未整列部分から「最小値」を探し出し、先頭の要素と入れ替えます。
+          </p>
+
+          <!-- カウンター -->
+          <div class="grid grid-cols-2 gap-2 mb-3 text-center">
+            <div class="bg-gray-100 p-2 rounded border">
+              <div class="text-xs font-bold text-gray-500">比較回数</div>
+              <div id="selectionComp" class="text-lg font-black text-red-600">0</div>
+            </div>
+            <div class="bg-gray-100 p-2 rounded border">
+              <div class="text-xs font-bold text-gray-500">入れ替え回数</div>
+              <div id="selectionSwap" class="text-lg font-black text-yellow-600">0</div>
+            </div>
+          </div>
+
+          <!-- ビジュアル表示エリア -->
+          <div id="selectionContainer" class="h-44 bg-gray-50 border border-gray-200 rounded-lg p-2 flex items-end justify-center gap-1 overflow-hidden">
+            <!-- バーがJSで挿入される -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 挿入ソート -->
+      <div class="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-2 border-b pb-2">
+            <h2 class="text-xl font-bold text-blue-700">挿入ソート</h2>
+            <div class="flex gap-1">
+              <button class="show-detail-btn bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded border border-blue-300 transition" data-algo="insertion">
+                📖 DNCL2
+              </button>
+              <button class="start-single-btn bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded hover:bg-blue-700" data-algo="insertion">
+                個別実行
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mb-3 min-h-[36px]">
+            要素を一つずつ取り出し、整列済みの適切な位置に挿入していきます。
+          </p>
+
+          <!-- カウンター -->
+          <div class="grid grid-cols-2 gap-2 mb-3 text-center">
+            <div class="bg-gray-100 p-2 rounded border">
+              <div class="text-xs font-bold text-gray-500">比較回数</div>
+              <div id="insertionComp" class="text-lg font-black text-red-600">0</div>
+            </div>
+            <div class="bg-gray-100 p-2 rounded border">
+              <div class="text-xs font-bold text-gray-500">移動・代入回数</div>
+              <div id="insertionSwap" class="text-lg font-black text-yellow-600">0</div>
+            </div>
+          </div>
+
+          <!-- ビジュアル表示エリア -->
+          <div id="insertionContainer" class="h-44 bg-gray-50 border border-gray-200 rounded-lg p-2 flex items-end justify-center gap-1 overflow-hidden">
+            <!-- バーがJSで挿入される -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. ヒープソート -->
+      <div class="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-2 border-b pb-2">
+            <h2 class="text-xl font-bold text-blue-700">ヒープソート</h2>
+            <div class="flex gap-1">
+              <button class="show-detail-btn bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded border border-blue-300 transition" data-algo="heap">
+                📖 DNCL2
+              </button>
+              <button class="start-single-btn bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded hover:bg-blue-700" data-algo="heap">
+                個別実行
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mb-3 min-h-[36px]">
+            二分ヒープ木構造を構築し、根（最大値）を取り出して末尾と入れ替える操作を繰り返します。
+          </p>
+
+          <!-- カウンター -->
+          <div class="grid grid-cols-2 gap-2 mb-3 text-center">
+            <div class="bg-gray-100 p-2 rounded border">
+              <div class="text-xs font-bold text-gray-500">比較回数</div>
+              <div id="heapComp" class="text-lg font-black text-red-600">0</div>
+            </div>
+            <div class="bg-gray-100 p-2 rounded border">
+              <div class="text-xs font-bold text-gray-500">入れ替え回数</div>
+              <div id="heapSwap" class="text-lg font-black text-yellow-600">0</div>
+            </div>
+          </div>
+
+          <!-- ビジュアル表示エリア -->
+          <div id="heapContainer" class="h-44 bg-gray-50 border border-gray-200 rounded-lg p-2 flex items-end justify-center gap-1 overflow-hidden">
+            <!-- バーがJSで挿入される -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. マージソート -->
+      <div class="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-2 border-b pb-2">
+            <h2 class="text-xl font-bold text-blue-700">マージソート</h2>
+            <div class="flex gap-1">
+              <button class="show-detail-btn bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded border border-blue-300 transition" data-algo="merge">
+                📖 DNCL2
+              </button>
+              <button class="start-single-btn bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded hover:bg-blue-700" data-algo="merge">
+                個別実行
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mb-3 min-h-[36px]">
+            配列を半分に分割（再帰）し、整列させながら併合（マージ）する分かつ統治法アルゴリズムです。
+          </p>
+
+          <!-- カウンター -->
+          <div class="grid grid-cols-2 gap-2 mb-3 text-center">
+            <div class="bg-gray-100 p-2 rounded border">
+              <div class="text-xs font-bold text-gray-500">比較回数</div>
+              <div id="mergeComp" class="text-lg font-black text-red-600">0</div>
+            </div>
+            <div class="bg-gray-100 p-2 rounded border">
+              <div class="text-xs font-bold text-gray-500">書き戻し回数</div>
+              <div id="mergeSwap" class="text-lg font-black text-yellow-600">0</div>
+            </div>
+          </div>
+
+          <!-- ビジュアル表示エリア -->
+          <div id="mergeContainer" class="h-44 bg-gray-50 border border-gray-200 rounded-lg p-2 flex items-end justify-center gap-1 overflow-hidden">
+            <!-- バーがJSで挿入される -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. バケットソート -->
+      <div class="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-2 border-b pb-2">
+            <h2 class="text-xl font-bold text-blue-700">バケットソート</h2>
+            <div class="flex gap-1">
+              <button class="show-detail-btn bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded border border-blue-300 transition" data-algo="bucket">
+                📖 DNCL2
+              </button>
+              <button class="start-single-btn bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded hover:bg-blue-700" data-algo="bucket">
+                個別実行
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mb-3 min-h-[36px]">
+            値の範囲ごとに「バケツ」を用意して振り分け、順に取り出します。比較を行わない高速ソートです。
+          </p>
+
+          <!-- カウンター -->
+          <div class="grid grid-cols-2 gap-2 mb-3 text-center">
+            <div class="bg-gray-100 p-2 rounded border">
+              <div class="text-xs font-bold text-gray-500">比較回数</div>
+              <div id="bucketComp" class="text-lg font-black text-red-600">0</div>
+            </div>
+            <div class="bg-gray-100 p-2 rounded border">
+              <div class="text-xs font-bold text-gray-500">移動・代入回数</div>
+              <div id="bucketSwap" class="text-lg font-black text-yellow-600">0</div>
+            </div>
+          </div>
+
+          <!-- ビジュアル表示エリア -->
+          <div id="bucketContainer" class="h-44 bg-gray-50 border border-gray-200 rounded-lg p-2 flex items-end justify-center gap-1 overflow-hidden">
+            <!-- バーがJSで挿入される -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 学習用解説セクション -->
+    <section class="bg-gray-50 border-2 border-gray-200 rounded-xl p-6">
+      <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+        💡 高校生のためのアルゴリズム比較のポイント
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm leading-relaxed">
+        <div class="bg-white p-4 rounded-lg border">
+          <h4 class="font-bold text-blue-600 mb-1">計算量の比較 (O(N²) vs O(N log N))</h4>
+          <p class="text-gray-600">
+            要素数 N が増えると、バブル・選択・挿入の <strong>O(N²)</strong> に比べ、ヒープ・マージの <strong>O(N log N)</strong> が圧倒的に高速になります。
+          </p>
+        </div>
+        <div class="bg-white p-4 rounded-lg border">
+          <h4 class="font-bold text-blue-600 mb-1">非比較ソート（バケットソート）</h4>
+          <p class="text-gray-600">
+            バケットソートは要素どうしを比較せず、値の範囲で振り分けるため <strong>O(N + K)</strong> で動きますが、メモリ領域が多く必要になります。
+          </p>
+        </div>
+        <div class="bg-white p-4 rounded-lg border">
+          <h4 class="font-bold text-blue-600 mb-1">追加メモリ (空間計算量)</h4>
+          <p class="text-gray-600">
+            マージソートやバケットソートは元の配列とは別に作業用配列・バケツが必要ですが、ヒープソートや選択ソートは元の配列内で完了します。
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- モーダルダイアログ (DNCL2解説・詳細) -->
+  <div id="detailModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+    <div class="bg-white rounded-xl border-2 border-blue-600 max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- モーダルヘッダー -->
+      <div class="bg-blue-600 text-white p-4 flex justify-between items-center">
+        <h3 id="modalTitle" class="text-xl font-bold flex items-center gap-2">
+          <!-- タイトル挿入箇所 -->
+        </h3>
+        <button id="closeModalBtn" class="text-white hover:bg-blue-700 rounded-lg p-1 text-xl font-bold w-8 h-8 flex items-center justify-center">
+          ✕
+        </button>
+      </div>
+
+      <!-- モーダルコンテンツ -->
+      <div id="modalBody" class="p-6 overflow-y-auto space-y-6 text-sm leading-relaxed text-gray-800">
+        <!-- JSで動的挿入 -->
+      </div>
+
+      <!-- モーダルフッター -->
+      <div class="bg-gray-100 p-3 border-t text-right">
+        <button id="closeModalFooterBtn" class="bg-gray-800 hover:bg-black text-white font-bold py-1.5 px-5 rounded-lg transition text-sm">
+          閉じる
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- DNCL2解説用データ構造 ---
+    const algoDetails = {
+      bubble: {
+        title: 'バブルソート (Bubble Sort)',
+        description: '隣り合う2つの要素を比較し、順序が逆であれば入れ替える操作を配列の端まで繰り返します。1回の走査（パス）ごとに、未整列部分の最大値が「泡（Bubble）」のように右端へと浮かび上がって確定します。',
+        dncl2: `/* 配列 A の要素数を N とする (インデックスは 0 から N - 1) */
+i を 0 から N - 2 まで 1 ずつ増やしながら繰り返す:
+    j を 0 から N - i - 2 まで 1 ずつ増やしながら繰り返す:
+        もし A[j] > A[j + 1] ならば:
+            /* 要素の入れ替え (スワップ) */
+            tmp ← A[j]
+            A[j] ← A[j + 1]
+            A[j + 1] ← tmp`,
+        complexity: {
+          worst: 'O(N²)',
+          avg: 'O(N²)',
+          best: 'O(N)',
+          space: 'O(1)'
+        },
+        formula: '比較回数: N(N - 1) / 2 回 (一定)\n入れ替え回数: 最悪 N(N - 1) / 2 回, 平均 N(N - 1) / 4 回',
+        features: [
+          '実装が直感的でわかりやすい基本的なアルゴリズムです。',
+          '要素同士の比較・交換が隣接要素のみで行われるため「安定ソート」です。',
+          'データが逆順に並んでいると入れ替えが頻繁に発生し、効率が低下します。'
+        ]
+      },
+      selection: {
+        title: '選択ソート (Selection Sort)',
+        description: '未整列の部分から最小値（または最大値）を「選択」して探し出し、未整列部分の先頭の要素と入れ替えます。この操作を繰り返すことで、左側から順に整列済み領域を確定させていきます。',
+        dncl2: `/* 配列 A の要素数を N とする (インデックスは 0 から N - 1) */
+i を 0 から N - 2 まで 1 ずつ増やしながら繰り返す:
+    minIdx ← i
+    j を i + 1 から N - 1 まで 1 ずつ増やしながら繰り返す:
+        もし A[j] < A[minIdx] ならば:
+            minIdx ← j
+    もし minIdx ≠ i ならば:
+        /* 最小値の位置と入れ替え */
+        tmp ← A[i]
+        A[i] ← A[minIdx]
+        A[minIdx] ← tmp`,
+        complexity: {
+          worst: 'O(N²)',
+          avg: 'O(N²)',
+          best: 'O(N²)',
+          space: 'O(1)'
+        },
+        formula: '比較回数: N(N - 1) / 2 回 (常に一定)\n入れ替え回数: 最大 N - 1 回 (非常に少ない)',
+        features: [
+          'データの初期状態に関わらず、比較回数は常に一定です。',
+          '要素の「入れ替え（書き込み）回数」が最大でも N - 1 回と非常に少ないのが最大の強みです。',
+          '離れた位置の要素と交換するため「不安定ソート」です。'
+        ]
+      },
+      insertion: {
+        title: '挿入ソート (Insertion Sort)',
+        description: '手札のトランプを整理するように、配列から順に要素を1つずつ取り出し、既に整列されている部分列の適切な位置を見つけて「挿入」していきます。',
+        dncl2: `/* 配列 A の要素数を N とする (インデックスは 0 から N - 1) */
+i を 1 から N - 1 まで 1 ずつ増やしながら繰り返す:
+    key ← A[i]
+    j ← i - 1
+    /* 適切な挿入位置を探しながら要素を右へずらす */
+    j ≧ 0 かつ A[j] > key である間繰り返す:
+        A[j + 1] ← A[j]
+        j ← j - 1
+    A[j + 1] ← key`,
+        complexity: {
+          worst: 'O(N²)',
+          avg: 'O(N²)',
+          best: 'O(N)',
+          space: 'O(1)'
+        },
+        formula: '比較・移動回数: 最悪 N(N - 1) / 2 回\n最良時（すでに整列済みの場合）: N - 1 回の比較のみ',
+        features: [
+          'すでに「ある程度整列されているデータ」に対して非常に高速（最良 O(N)）に動作します。',
+          'データが順次追加される場合のソートにも適しています。',
+          '「安定ソート」です。'
+        ]
+      },
+      heap: {
+        title: 'ヒープソート (Heap Sort)',
+        description: '二分ヒープ木構造（親が子より常に大きい完全二分木）を構築し、根にある最大値を配列の末尾と交換して切り離す操作を繰り返します。',
+        dncl2: `/* 手順 Heapify(A, N, i): インデックス i を根とする部分木をヒープ化する */
+手続き Heapify(A, n, i):
+    largest ← i
+    left ← 2 * i + 1
+    right ← 2 * i + 2
+    もし left < n かつ A[left] > A[largest] ならば:
+        largest ← left
+    もし right < n かつ A[right] > A[largest] ならば:
+        largest ← right
+    もし largest ≠ i ならば:
+        A[i] と A[largest] を入れ替える
+        Heapify(A, n, largest)
+
+/* メイン処理 */
+i を N / 2 - 1 から 0 まで減らしながら: Heapify(A, N, i)
+i を N - 1 から 1 まで減らしながら:
+    A[0] と A[i] を入れ替える
+    Heapify(A, i, 0)`,
+        complexity: {
+          worst: 'O(N log N)',
+          avg: 'O(N log N)',
+          best: 'O(N log N)',
+          space: 'O(1)'
+        },
+        formula: '比較回数: 最悪 約 2N log₂N 回\n追加メモリ領域を必要としない O(N log N) アルゴリズムです。',
+        features: [
+          'どんな悪条件のデータでも確実に O(N log N) の性能を保証します。',
+          '追加の作業用配列を必要としない（内部ソート / In-place sort）ためメモリ効率が良いです。',
+          '「不安定ソート」です。'
+        ]
+      },
+      merge: {
+        title: 'マージソート (Merge Sort)',
+        description: '配列を半分ずつ要素数が1になるまで再帰的に分割し、2つの整列済み配列を比較しながら1つに併合（マージ）することで全体を整列させます。分かつ統治法（Divide and Conquer）の代表例です。',
+        dncl2: `手続き MergeSort(A, left, right):
+    もし left < right ならば:
+        mid ← (left + right) / 2 (整数除算)
+        MergeSort(A, left, mid)
+        MergeSort(A, mid + 1, right)
+        Merge(A, left, mid, right)
+
+手続き Merge(A, left, mid, right):
+    /* 作業用配列 B に left〜right をコピ-:
+       左右の要素を小さい順に比較して A に書き戻す */`,
+        complexity: {
+          worst: 'O(N log N)',
+          avg: 'O(N log N)',
+          best: 'O(N log N)',
+          space: 'O(N)'
+        },
+        formula: '比較回数: 常に 約 N log₂N 回\n追加メモリ: O(N) (元の配列と同サイズの作業用配列が必要)',
+        features: [
+          '常に安定して O(N log N) で動作します。',
+          '同値要素の前後関係が保たれる「安定ソート」です。',
+          'マージの作業用に元の配列と同等サイズ（O(N)）のメモリを要するのが欠点です。'
+        ]
+      },
+      bucket: {
+        title: 'バケットソート (Bucket Sort / ビンソート)',
+        description: '値の範囲に応じてあらかじめ複数の「バケツ（バケット）」を用意し、データを各バケツに分配したあと、バケツ内のデータを連結・取り出して並べ替えます。',
+        dncl2: `/* 配列の要素の値が 0〜K-1 の範囲にあるとする */
+大きさ K の配列 B (バケツ) を 0 で初期化する
+i を 0 から N - 1 まで 1 ずつ増やしながら繰り返す:
+    B[A[i]] ← B[A[i]] + 1   /* 各値の出現回数をカウント */
+
+idx ← 0
+val を 0 から K - 1 まで 1 ずつ増やしながら繰り返す:
+    cnt を 1 から B[val] まで繰り返す:
+        A[idx] ← val
+        idx ← idx + 1`,
+        complexity: {
+          worst: 'O(N + K)',
+          avg: 'O(N + K)',
+          best: 'O(N + K)',
+          space: 'O(N + K)'
+        },
+        formula: '計算時間: O(N + K) (K は値の取り得る範囲の広さ)\n要素間の大きさ比較（< や >）を行わない非比較ソートです。',
+        features: [
+          '要素どうしの直接の「比較」を行わずに並べ替えるため、O(N log N) の壁を越えて非常に高速です。',
+          '値の取り得る範囲（K）が限定されている場合に非常に有効です。',
+          '値の範囲が非常に広い場合や浮動小数点数などではメモリ消費が大きくなるか工夫が必要です。'
+        ]
+      }
+    };
+
+    // --- グローバル状態管理 ---
+    let baseArray = [];
+    let isRunning = false;
+    let isPaused = false;
+    let animationSpeed = 50;
+
+    const ALGOS = ['bubble', 'selection', 'insertion', 'heap', 'merge', 'bucket'];
+
+    // アルゴリズムごとの個別状態
+    const state = {};
+    ALGOS.forEach(a => {
+      state[a] = { arr: [], comp: 0, swap: 0, done: false };
+    });
+
+    // 色の定義 (原色系)
+    const COLOR_NORMAL = '#2563EB';   // 青 (未整列)
+    const COLOR_COMPARE = '#EF4444';  // 赤 (比較中)
+    const COLOR_SWAP = '#F59E0B';     // 黄/橙 (移動・交換中)
+    const COLOR_WORK = '#8B5CF6';     // 紫 (分解・作業中)
+    const COLOR_DONE = '#10B981';     // 緑 (確定)
+
+    // DOM要素
+    const arrayTypeSelect = document.getElementById('arrayType');
+    const arraySizeInput = document.getElementById('arraySize');
+    const arraySizeVal = document.getElementById('arraySizeVal');
+    const speedInput = document.getElementById('speed');
+    const speedVal = document.getElementById('speedVal');
+    
+    const customArrayContainer = document.getElementById('customArrayContainer');
+    const customArrayInput = document.getElementById('customArrayInput');
+    const applyCustomBtn = document.getElementById('applyCustomBtn');
+
+    const resetBtn = document.getElementById('resetBtn');
+    const startAllBtn = document.getElementById('startAllBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+
+    // UI初期化
+    window.onload = () => {
+      initArray();
+      setupEventListeners();
+    };
+
+    // イベントリスナー設定
+    function setupEventListeners() {
+      arrayTypeSelect.addEventListener('change', () => {
+        const type = arrayTypeSelect.value;
+        if (type === 'custom') {
+          customArrayContainer.classList.remove('hidden');
+          arraySizeInput.disabled = true;
+          arraySizeInput.classList.add('opacity-50');
+        } else {
+          customArrayContainer.classList.add('hidden');
+          arraySizeInput.disabled = isRunning;
+          arraySizeInput.classList.remove('opacity-50');
+        }
+        if (!isRunning) initArray();
+      });
+
+      applyCustomBtn.addEventListener('click', () => {
+        if (!isRunning) initArray();
+      });
+
+      arraySizeInput.addEventListener('input', (e) => {
+        arraySizeVal.textContent = e.target.value;
+        if (!isRunning) initArray();
+      });
+
+      speedInput.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        if (val < 30) speedVal.textContent = 'ゆっくり';
+        else if (val < 70) speedVal.textContent = '普通';
+        else speedVal.textContent = '高速';
+        animationSpeed = 101 - val;
+      });
+
+      resetBtn.addEventListener('click', () => {
+        if (isRunning) stopAll();
+        initArray();
+      });
+
+      startAllBtn.addEventListener('click', () => {
+        if (!isRunning) {
+          startAll();
+        }
+      });
+
+      pauseBtn.addEventListener('click', () => {
+        isPaused = !isPaused;
+        pauseBtn.textContent = isPaused ? '▶ 再開' : '⏸ 一時停止';
+        pauseBtn.classList.toggle('bg-yellow-400', !isPaused);
+        pauseBtn.classList.toggle('bg-green-500', isPaused);
+      });
+
+      document.querySelectorAll('.start-single-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const algo = e.target.dataset.algo;
+          if (!isRunning) {
+            startSingle(algo);
+          }
+        });
+      });
+
+      // 詳細・DNCL2ボタンのイベントリスナー
+      document.querySelectorAll('.show-detail-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const algo = e.target.dataset.algo;
+          openDetailModal(algo);
+        });
+      });
+
+      // モーダル閉じるボタン
+      document.getElementById('closeModalBtn').addEventListener('click', closeDetailModal);
+      document.getElementById('closeModalFooterBtn').addEventListener('click', closeDetailModal);
+      document.getElementById('detailModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('detailModal')) closeDetailModal();
+      });
+    }
+
+    // モーダルを開く処理
+    function openDetailModal(algo) {
+      const detail = algoDetails[algo];
+      if (!detail) return;
+
+      document.getElementById('modalTitle').innerText = `📖 ${detail.title}`;
+      
+      const modalBody = document.getElementById('modalBody');
+      modalBody.innerHTML = `
+        <div>
+          <h4 class="text-base font-bold text-blue-700 mb-1 border-b pb-1">💡 動作のしくみ</h4>
+          <p class="text-gray-700">${detail.description}</p>
+        </div>
+
+        <div>
+          <h4 class="text-base font-bold text-blue-700 mb-2 border-b pb-1">💻 DNCL2 コード (共通テスト「情報I」対応)</h4>
+          <div class="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-xs overflow-x-auto leading-relaxed border border-gray-700 shadow-inner">
+            <pre><code>${escapeHtml(detail.dncl2)}</code></pre>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <h4 class="text-sm font-bold text-blue-800 mb-2">⏱ 計算量 (オーダー)</h4>
+            <ul class="text-xs space-y-1 text-gray-700">
+              <li>・最悪時間計算量: <strong class="text-red-600">${detail.complexity.worst}</strong></li>
+              <li>・平均時間計算量: <strong>${detail.complexity.avg}</strong></li>
+              <li>・最良時間計算量: <strong class="text-green-600">${detail.complexity.best}</strong></li>
+              <li>・領域(空間)計算量: <strong>${detail.complexity.space}</strong></li>
+            </ul>
+          </div>
+
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <h4 class="text-sm font-bold text-yellow-800 mb-2">📊 比較・交換回数の関係</h4>
+            <pre class="text-xs font-mono text-gray-800 whitespace-pre-wrap">${detail.formula}</pre>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-base font-bold text-blue-700 mb-2 border-b pb-1">⭐ 特徴とポイント</h4>
+          <ul class="list-disc list-inside space-y-1 text-xs text-gray-700">
+            ${detail.features.map(f => `<li>${f}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+
+      document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    // モーダルを閉じる処理
+    function closeDetailModal() {
+      document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    // HTMLエスケープヘルパー
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // 配列の生成と描画の初期化
+    function initArray() {
+      const type = arrayTypeSelect.value;
+      const size = parseInt(arraySizeInput.value);
+      baseArray = [];
+
+      if (type === 'random') {
+        for (let i = 0; i < size; i++) {
+          baseArray.push(Math.floor(Math.random() * 90) + 10);
+        }
+      } else if (type === 'worst') {
+        // 最悪の場合 (完全降順)
+        const step = 85 / Math.max(size - 1, 1);
+        for (let i = 0; i < size; i++) {
+          baseArray.push(Math.round(95 - i * step));
+        }
+      } else if (type === 'best') {
+        // 最良の場合 (完全昇順)
+        const step = 85 / Math.max(size - 1, 1);
+        for (let i = 0; i < size; i++) {
+          baseArray.push(Math.round(10 + i * step));
+        }
+      } else if (type === 'custom') {
+        // 手入力・任意の配列
+        const rawValues = customArrayInput.value.split(/[, \s]+/).map(v => parseInt(v.trim())).filter(v => !isNaN(v) && v > 0);
+        if (rawValues.length > 0) {
+          baseArray = rawValues.map(v => Math.min(Math.max(v, 5), 100)); // 5〜100の範囲にクリップ
+          arraySizeInput.value = baseArray.length;
+          arraySizeVal.textContent = baseArray.length;
+        } else {
+          // 入力が不正な場合のフォールバック
+          baseArray = [50, 20, 80, 10, 90, 30, 70, 40, 60];
+          arraySizeInput.value = baseArray.length;
+          arraySizeVal.textContent = baseArray.length;
+        }
+      }
+
+      ALGOS.forEach(algo => {
+        state[algo].arr = [...baseArray];
+        state[algo].comp = 0;
+        state[algo].swap = 0;
+        state[algo].done = false;
+        
+        updateCounters(algo);
+        renderBars(algo);
+      });
+
+      toggleControls(false);
+    }
+
+    // バーのHTML生成・描画
+    function renderBars(algo, highlights = {}) {
+      const container = document.getElementById(`${algo}Container`);
+      const arr = state[algo].arr;
+      container.innerHTML = '';
+
+      const maxVal = 100;
+      
+      arr.forEach((val, idx) => {
+        const bar = document.createElement('div');
+        bar.className = 'bar flex-1 rounded-t-sm';
+        bar.style.height = `${Math.max((val / maxVal) * 100, 2)}%`;
+        
+        // 色設定
+        let color = COLOR_NORMAL;
+        if (state[algo].done) {
+          color = COLOR_DONE;
+        } else if (highlights.done && highlights.done.includes(idx)) {
+          color = COLOR_DONE;
+        } else if (highlights.compare && highlights.compare.includes(idx)) {
+          color = COLOR_COMPARE;
+        } else if (highlights.swap && highlights.swap.includes(idx)) {
+          color = COLOR_SWAP;
+        } else if (highlights.work && highlights.work.includes(idx)) {
+          color = COLOR_WORK;
+        }
+        
+        bar.style.backgroundColor = color;
+        container.appendChild(bar);
+      });
+    }
+
+    // カウンター表示の更新
+    function updateCounters(algo) {
+      document.getElementById(`${algo}Comp`).textContent = state[algo].comp.toLocaleString();
+      document.getElementById(`${algo}Swap`).textContent = state[algo].swap.toLocaleString();
+    }
+
+    // 遅延処理＆Pause管理
+    async function sleep() {
+      while (isPaused) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      const delay = animationSpeed * 5;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+
+    // コントロールボタンの状態切替
+    function toggleControls(running) {
+      isRunning = running;
+      isPaused = false;
+      
+      startAllBtn.disabled = running;
+      resetBtn.disabled = running && !isPaused;
+      arrayTypeSelect.disabled = running;
+      arraySizeInput.disabled = running || arrayTypeSelect.value === 'custom';
+      customArrayInput.disabled = running;
+      applyCustomBtn.disabled = running;
+      
+      if (running) {
+        startAllBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        arrayTypeSelect.classList.add('opacity-50');
+        pauseBtn.classList.remove('hidden');
+        pauseBtn.textContent = '⏸ 一時停止';
+        pauseBtn.className = 'bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded-lg shadow transition active:scale-95';
+      } else {
+        startAllBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        arrayTypeSelect.classList.remove('opacity-50');
+        pauseBtn.classList.add('hidden');
+      }
+
+      document.querySelectorAll('.start-single-btn').forEach(btn => {
+        btn.disabled = running;
+        if (running) btn.classList.add('opacity-50', 'cursor-not-allowed');
+        else btn.classList.remove('opacity-50', 'cursor-not-allowed');
+      });
+    }
+
+    // --- 各ソートアルゴリズムの実装 ---
+
+    // 1. バブルソート
+    async function runBubbleSort() {
+      const algo = 'bubble';
+      const arr = state[algo].arr;
+      const n = arr.length;
+      let doneIndices = [];
+
+      for (let i = 0; i < n - 1; i++) {
+        for (let j = 0; j < n - i - 1; j++) {
+          if (!isRunning) return;
+
+          state[algo].comp++;
+          updateCounters(algo);
+          renderBars(algo, { compare: [j, j + 1], done: doneIndices });
+          await sleep();
+
+          if (arr[j] > arr[j + 1]) {
+            [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+            state[algo].swap++;
+            updateCounters(algo);
+            renderBars(algo, { swap: [j, j + 1], done: doneIndices });
+            await sleep();
+          }
+        }
+        doneIndices.push(n - 1 - i);
+      }
+      doneIndices.push(0);
+      state[algo].done = true;
+      renderBars(algo);
+    }
+
+    // 2. 選択ソート
+    async function runSelectionSort() {
+      const algo = 'selection';
+      const arr = state[algo].arr;
+      const n = arr.length;
+      let doneIndices = [];
+
+      for (let i = 0; i < n - 1; i++) {
+        let minIdx = i;
+
+        for (let j = i + 1; j < n; j++) {
+          if (!isRunning) return;
+
+          state[algo].comp++;
+          updateCounters(algo);
+          renderBars(algo, { compare: [j, minIdx], done: doneIndices });
+          await sleep();
+
+          if (arr[j] < arr[minIdx]) {
+            minIdx = j;
+          }
+        }
+
+        if (minIdx !== i) {
+          [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
+          state[algo].swap++;
+          updateCounters(algo);
+          renderBars(algo, { swap: [i, minIdx], done: doneIndices });
+          await sleep();
+        }
+
+        doneIndices.push(i);
+      }
+      doneIndices.push(n - 1);
+      state[algo].done = true;
+      renderBars(algo);
+    }
+
+    // 3. 挿入ソート
+    async function runInsertionSort() {
+      const algo = 'insertion';
+      const arr = state[algo].arr;
+      const n = arr.length;
+
+      for (let i = 1; i < n; i++) {
+        let key = arr[i];
+        let j = i - 1;
+
+        renderBars(algo, { swap: [i] });
+        await sleep();
+
+        while (j >= 0) {
+          if (!isRunning) return;
+
+          state[algo].comp++;
+          updateCounters(algo);
+          renderBars(algo, { compare: [j, j + 1] });
+          await sleep();
+
+          if (arr[j] > key) {
+            arr[j + 1] = arr[j];
+            state[algo].swap++;
+            updateCounters(algo);
+            renderBars(algo, { swap: [j] });
+            await sleep();
+            j = j - 1;
+          } else {
+            break;
+          }
+        }
+        arr[j + 1] = key;
+        renderBars(algo, { swap: [j + 1] });
+        await sleep();
+      }
+
+      state[algo].done = true;
+      renderBars(algo);
+    }
+
+    // 4. ヒープソート
+    async function runHeapSort() {
+      const algo = 'heap';
+      const arr = state[algo].arr;
+      const n = arr.length;
+      let doneIndices = [];
+
+      async function heapify(size, i) {
+        let largest = i;
+        let left = 2 * i + 1;
+        let right = 2 * i + 2;
+
+        if (left < size) {
+          state[algo].comp++;
+          updateCounters(algo);
+          renderBars(algo, { compare: [left, largest], done: doneIndices });
+          await sleep();
+          if (arr[left] > arr[largest]) largest = left;
+        }
+
+        if (right < size) {
+          state[algo].comp++;
+          updateCounters(algo);
+          renderBars(algo, { compare: [right, largest], done: doneIndices });
+          await sleep();
+          if (arr[right] > arr[largest]) largest = right;
+        }
+
+        if (largest !== i) {
+          [arr[i], arr[largest]] = [arr[largest], arr[i]];
+          state[algo].swap++;
+          updateCounters(algo);
+          renderBars(algo, { swap: [i, largest], done: doneIndices });
+          await sleep();
+
+          await heapify(size, largest);
+        }
+      }
+
+      // 初期ヒープ構築
+      for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
+        if (!isRunning) return;
+        await heapify(n, i);
+      }
+
+      // 最大値を末尾へ移動
+      for (let i = n - 1; i > 0; i--) {
+        if (!isRunning) return;
+
+        [arr[0], arr[i]] = [arr[i], arr[0]];
+        state[algo].swap++;
+        updateCounters(algo);
+        doneIndices.push(i);
+        renderBars(algo, { swap: [0, i], done: doneIndices });
+        await sleep();
+
+        await heapify(i, 0);
+      }
+      doneIndices.push(0);
+
+      state[algo].done = true;
+      renderBars(algo);
+    }
+
+    // 5. マージソート
+    async function runMergeSort() {
+      const algo = 'merge';
+      const arr = state[algo].arr;
+      const n = arr.length;
+
+      async function merge(left, mid, right) {
+        let leftArr = arr.slice(left, mid + 1);
+        let rightArr = arr.slice(mid + 1, right + 1);
+
+        let i = 0, j = 0, k = left;
+
+        while (i < leftArr.length && j < rightArr.length) {
+          if (!isRunning) return;
+
+          state[algo].comp++;
+          updateCounters(algo);
+          renderBars(algo, { compare: [left + i, mid + 1 + j], work: Array.from({length: right - left + 1}, (_, idx) => left + idx) });
+          await sleep();
+
+          if (leftArr[i] <= rightArr[j]) {
+            arr[k] = leftArr[i];
+            i++;
+          } else {
+            arr[k] = rightArr[j];
+            j++;
+          }
+          state[algo].swap++;
+          updateCounters(algo);
+          renderBars(algo, { swap: [k], work: Array.from({length: right - left + 1}, (_, idx) => left + idx) });
+          await sleep();
+          k++;
+        }
+
+        while (i < leftArr.length) {
+          if (!isRunning) return;
+          arr[k] = leftArr[i];
+          state[algo].swap++;
+          updateCounters(algo);
+          renderBars(algo, { swap: [k] });
+          await sleep();
+          i++;
+          k++;
+        }
+
+        while (j < rightArr.length) {
+          if (!isRunning) return;
+          arr[k] = rightArr[j];
+          state[algo].swap++;
+          updateCounters(algo);
+          renderBars(algo, { swap: [k] });
+          await sleep();
+          j++;
+          k++;
+        }
+      }
+
+      async function mergeSortHelper(left, right) {
+        if (left >= right || !isRunning) return;
+
+        const mid = Math.floor((left + right) / 2);
+        
+        // ハイライト（分割動作）
+        renderBars(algo, { work: Array.from({length: right - left + 1}, (_, idx) => left + idx) });
+        await sleep();
+
+        await mergeSortHelper(left, mid);
+        await mergeSortHelper(mid + 1, right);
+        await merge(left, mid, right);
+      }
+
+      await mergeSortHelper(0, n - 1);
+
+      state[algo].done = true;
+      renderBars(algo);
+    }
+
+    // 6. バケットソート
+    async function runBucketSort() {
+      const algo = 'bucket';
+      const arr = state[algo].arr;
+      const n = arr.length;
+
+      // 値の範囲 (10〜100) を考慮して 10 個のバケツを用意 (例: 10-19, 20-29, ...)
+      const bucketCount = 10;
+      const buckets = Array.from({ length: bucketCount }, () => []);
+
+      // 1. バケツへ振り分け
+      for (let i = 0; i < n; i++) {
+        if (!isRunning) return;
+
+        const val = arr[i];
+        const bucketIndex = Math.min(Math.floor((val - 10) / 9), bucketCount - 1);
+        buckets[bucketIndex].push(val);
+
+        state[algo].swap++;
+        updateCounters(algo);
+        renderBars(algo, { work: [i] });
+        await sleep();
+      }
+
+      // 2. 各バケツ内をソート (挿入ソート的処理) ＆ 元配列へ書き戻し
+      let index = 0;
+      let doneIndices = [];
+
+      for (let b = 0; b < bucketCount; b++) {
+        // バケツ内ソート (JavaScript標準)
+        buckets[b].sort((a, b) => a - b);
+
+        for (let j = 0; j < buckets[b].length; j++) {
+          if (!isRunning) return;
+
+          arr[index] = buckets[b][j];
+          state[algo].swap++;
+          updateCounters(algo);
+          doneIndices.push(index);
+
+          renderBars(algo, { swap: [index], done: [...doneIndices] });
+          await sleep();
+          index++;
+        }
+      }
+
+      state[algo].done = true;
+      renderBars(algo);
+    }
+
+    // 6種一斉スタート
+    async function startAll() {
+      toggleControls(true);
+      
+      ALGOS.forEach(algo => {
+        state[algo].arr = [...baseArray];
+        state[algo].comp = 0;
+        state[algo].swap = 0;
+        state[algo].done = false;
+        updateCounters(algo);
+      });
+
+      await Promise.all([
+        runBubbleSort(),
+        runSelectionSort(),
+        runInsertionSort(),
+        runHeapSort(),
+        runMergeSort(),
+        runBucketSort()
+      ]);
+
+      toggleControls(false);
+    }
+
+    // 単独実行
+    async function startSingle(algo) {
+      toggleControls(true);
+
+      state[algo].arr = [...baseArray];
+      state[algo].comp = 0;
+      state[algo].swap = 0;
+      state[algo].done = false;
+      updateCounters(algo);
+
+      if (algo === 'bubble') await runBubbleSort();
+      if (algo === 'selection') await runSelectionSort();
+      if (algo === 'insertion') await runInsertionSort();
+      if (algo === 'heap') await runHeapSort();
+      if (algo === 'merge') await runMergeSort();
+      if (algo === 'bucket') await runBucketSort();
+
+      toggleControls(false);
+    }
+
+    // 強制停止
+    function stopAll() {
+      isRunning = false;
+      isPaused = false;
+      toggleControls(false);
+    }
+  </script>
+</body>
+</html>
