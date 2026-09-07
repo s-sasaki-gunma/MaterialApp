@@ -436,7 +436,7 @@
 
     // Magnet Snapping Config
     const SNAP_RADIUS = 35;     // Pixel radius for magnet snap to target port
-    const PORT_HIT_RADIUS = 16; // Hit detection area radius
+    const PORT_HIT_RADIUS = 8;  // Hit detection area radius
 
     // Waveform Drawer State
     let waveformOpen = false;
@@ -463,6 +463,62 @@
       D_FF:       { name: 'D-FF',     in: 2, out: 2, w: 90, h: 70, color: '#7c3aed', labels: { in: ['D','CLK'], out: ['Q','~Q'] } }
     };
 
+    // 重なり判定用ヘルパー関数
+    function isOverlapping(x, y, w, h, ignoreGateId = null, padding = 15) {
+      for (const g of gates) {
+        if (ignoreGateId !== null && g.id === ignoreGateId) continue;
+        if (
+          x < g.x + g.w + padding &&
+          x + w + padding > g.x &&
+          y < g.y + g.h + padding &&
+          y + h + padding > g.y
+        ) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // 空きスペースをグリッド探索して取得する関数
+    function findFreePosition(w, h, padding = 20) {
+      const startX = 60;
+      const startY = 60;
+      const maxX = Math.max(startX + 100, canvas.width - w - 20);
+      const maxY = Math.max(startY + 100, canvas.height - h - 20);
+      const step = 20;
+
+      for (let y = startY; y <= maxY; y += step) {
+        for (let x = startX; x <= maxX; x += step) {
+          if (!isOverlapping(x, y, w, h, null, padding)) {
+            return { x, y };
+          }
+        }
+      }
+      return { x: startX + Math.random() * 40, y: startY + Math.random() * 40 };
+    }
+
+    // ドラッグドロップ時に最も近い非重複位置を探す関数
+    function findClosestFreePosition(targetX, targetY, w, h, ignoreGateId = null, padding = 10) {
+      if (!isOverlapping(targetX, targetY, w, h, ignoreGateId, padding)) {
+        return { x: targetX, y: targetY };
+      }
+
+      const step = 15;
+      for (let radius = 1; radius <= 30; radius++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          for (let dy = -radius; dy <= radius; dy++) {
+            if (Math.abs(dx) !== radius && Math.abs(dy) !== radius) continue;
+            const testX = Math.max(10, Math.min(canvas.width - w - 10, targetX + dx * step));
+            const testY = Math.max(10, Math.min(canvas.height - h - 10, targetY + dy * step));
+            if (!isOverlapping(testX, testY, w, h, ignoreGateId, padding)) {
+              return { x: testX, y: testY };
+            }
+          }
+        }
+      }
+      return { x: targetX, y: targetY };
+    }
+
     // Resize listener for full canvas
     function resizeCanvas() {
       const rect = canvas.parentElement.getBoundingClientRect();
@@ -474,8 +530,15 @@
 
     function addGate(type, x, y, label = null) {
       const def = GATE_DEFS[type];
-      const posX = x !== undefined ? x : 80 + Math.random() * 150;
-      const posY = y !== undefined ? y : 80 + Math.random() * 150;
+      let posX = x;
+      let posY = y;
+
+      // 座標指定がない場合（パレットボタンからの追加）、重ならない空き位置を自動探索
+      if (posX === undefined || posY === undefined) {
+        const freePos = findFreePosition(def.w, def.h);
+        posX = freePos.x;
+        posY = freePos.y;
+      }
 
       const gate = {
         id: nextGateId++,
@@ -855,6 +918,13 @@
       if (selectedGate && selectedGate.type === 'BUTTON') {
         selectedGate.state = 0;
         evaluateSimulation();
+      }
+
+      // ドラッグ終了時に他のゲートと重なっている場合、最も近い空きスペースへ自動移動
+      if (isDragging && selectedGate) {
+        const adjustedPos = findClosestFreePosition(selectedGate.x, selectedGate.y, selectedGate.w, selectedGate.h, selectedGate.id, 10);
+        selectedGate.x = adjustedPos.x;
+        selectedGate.y = adjustedPos.y;
       }
 
       if (connectingPort) {
