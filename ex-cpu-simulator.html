@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仮想CPUシミュレータ - コンピュータの構成と動作</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap');
+        
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .font-mono-code {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* 白基調＋原色ベースのダイナミックハイライト */
+        .highlight-blue {
+            border-color: #2563eb !important;
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.4);
+            background-color: #eff6ff !important;
+        }
+        
+        .highlight-red {
+            border-color: #dc2626 !important;
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.4);
+            background-color: #fef2f2 !important;
+        }
+
+        .highlight-yellow {
+            border-color: #d97706 !important;
+            box-shadow: 0 0 15px rgba(217, 119, 6, 0.4);
+            background-color: #fffbeb !important;
+        }
+
+        .highlight-green {
+            border-color: #16a34a !important;
+            box-shadow: 0 0 15px rgba(22, 163, 74, 0.4);
+            background-color: #f0fdf4 !important;
+        }
+
+        .highlight-purple {
+            border-color: #7c3aed !important;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.4);
+            background-color: #f5f3ff !important;
+        }
+
+        .highlight-cyan {
+            border-color: #0891b2 !important;
+            box-shadow: 0 0 15px rgba(8, 145, 178, 0.4);
+            background-color: #ecfeff !important;
+        }
+
+        /* データバス・信号線アニメーション */
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -20;
+            }
+        }
+
+        .data-bus-line {
+            stroke-dasharray: 6, 6;
+            animation: dash 0.8s linear infinite;
+        }
+
+        .pulse-element {
+            animation: pulse-scale 0.4s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse-scale {
+            from { transform: scale(1); }
+            to { transform: scale(1.02); }
+        }
+
+        /* カスタムスクロールバー */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b-4 border-blue-600 shadow-sm sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap justify-between items-center gap-2">
+            <div class="flex items-center space-x-3">
+                <span class="bg-blue-600 text-white p-2 rounded-xl font-bold text-xl shadow-md">
+                    <i class="fa-solid fa-microchip"></i>
+                </span>
+                <div>
+                    <h1 class="text-xl font-extrabold text-slate-900 leading-none">仮想CPUシミュレータ</h1>
+                    <p class="text-xs text-slate-500 mt-1 font-bold">高校情報「コンピュータの構成と動作 / 実践問題29」完全対応</p>
+                </div>
+            </div>
+
+            <!-- Header Controls: Program Selector & Quiz Button -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <button id="btnOpenQuiz" class="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs md:text-sm px-3.5 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 active:translate-y-0.5">
+                    <i class="fa-solid fa-graduation-cap text-yellow-300 text-base"></i> 演習問題に挑戦！
+                </button>
+                <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                    <span class="text-xs font-extrabold text-slate-700 pl-1"><i class="fa-solid fa-book-open text-blue-600 mr-1"></i>プログラム:</span>
+                    <select id="presetSelect" class="bg-white border border-slate-300 text-xs md:text-sm font-bold rounded-md px-2 py-1 focus:outline-none focus:border-blue-600 transition">
+                        <option value="progA">【プログラムA】2数の加算 (3 + 5 = 8)</option>
+                        <option value="progB">【プログラムB】減算と負コード (3 - 5 = -2)</option>
+                        <option value="progC">【プログラムC】繰返し処理・乗算 (5 × 3 = 15)</option>
+                        <option value="progD">【プログラムD】CMPと比較ジャンプ (1+2+3+4+5=15)</option>
+                        <option value="challenge">【発展課題】3つの数の加算 (7 + 1 + 9 = 17)</option>
+                        <option value="custom">【自由作成】メモリダイレクト編集</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="mx-auto px-3 py-3 flex-1 flex flex-col gap-3 w-full" style="max-width: 100rem;">
+
+        <!-- Control Bar & Step Description Card -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+            <!-- Controls -->
+            <div class="lg:col-span-5 bg-white border-2 border-slate-200 rounded-xl p-3 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-center mb-1.5">
+                    <span class="text-xs font-black text-slate-600 uppercase tracking-wider"><i class="fa-solid fa-sliders text-red-500 mr-1"></i> 実行コントロール</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500">速度:</span>
+                        <input type="range" id="speedSlider" min="1" max="5" value="3" class="w-20 accent-blue-600 cursor-pointer">
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="btnStep" class="flex-1 bg-blue-600 hover:bg-blue-700 active:translate-y-0.5 text-white font-black py-2 px-3 rounded-lg text-xs md:text-sm shadow transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-forward-step"></i> 1ステップ進む
+                    </button>
+                    <button id="btnAuto" class="flex-1 bg-green-600 hover:bg-green-700 active:translate-y-0.5 text-white font-black py-2 px-3 rounded-lg text-xs md:text-sm shadow transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-play" id="autoIcon"></i> <span id="autoText">自動実行</span>
+                    </button>
+                    <button id="btnReset" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs md:text-sm transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-rotate-left"></i> リセット
+                    </button>
+                </div>
+            </div>
+
+            <!-- Execution Phase & Detail Description -->
+            <div id="phaseCard" class="lg:col-span-7 bg-white border-2 border-amber-400 rounded-xl p-3 shadow-sm flex flex-col justify-between transition-all">
+                <div class="flex items-center justify-between border-b pb-1">
+                    <div class="flex items-center gap-2">
+                        <span id="phaseBadge" class="bg-amber-500 text-white font-black text-[11px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            準備完了 (初期状態: 0番地)
+                        </span>
+                        <span id="stepCounter" class="text-xs font-mono font-bold text-slate-500">実行回数: 0</span>
+                    </div>
+                    <span class="text-xs font-bold text-slate-400"><i class="fa-solid fa-circle-info text-blue-500 mr-1"></i>動作解説</span>
+                </div>
+                <div class="py-1.5">
+                    <p id="statusDescription" class="text-xs md:text-sm font-bold text-slate-800 leading-snug">
+                        「1ステップ進む」または「自動実行」を押してプログラムを開始してください。プログラムカウンタ (PC=0) の命令から実行されます。
+                    </p>
+                </div>
+                <div class="text-[11px] text-slate-500 flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 font-mono">
+                    <div>PC: <span id="infoPC" class="font-black text-blue-600 text-xs">0</span></div>
+                    <div>IR: <span id="infoIR" class="font-bold text-amber-600 text-xs">---</span></div>
+                    <div>レジスタA: <span id="infoRegA" class="font-bold text-emerald-600 text-xs">0</span></div>
+                    <div>レジスタB: <span id="infoRegB" class="font-bold text-purple-600 text-xs">0</span></div>
+                    <div>条件コード: <span id="infoCC" class="font-bold text-cyan-600 text-xs">00 (正)</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CPU ARCHITECTURE & MEMORY VISUALIZER -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1">
+            
+            <!-- CPU Boundary Area -->
+            <div class="lg:col-span-8 bg-white border-4 border-slate-900 rounded-2xl p-3 md:p-4 shadow-md relative flex flex-col justify-between min-h-[490px]">
+                <!-- CPU Title Tag -->
+                <div class="absolute -top-3.5 left-5 bg-slate-900 text-white text-[11px] font-black px-3 py-0.5 rounded-md tracking-wider flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-microchip text-yellow-400"></i> CPU (中央処理装置)
+                </div>
+
+                <!-- Dynamic SVG Bus Connection Canvas -->
+                <svg id="busSvg" class="absolute inset-0 w-full h-full pointer-events-none z-0" style="min-height: 480px;">
+                    <!-- Lines between components -->
+                    <path id="bus-pc-mem" d="M0,0" stroke="#2563eb" stroke-width="3" fill="none" class="opacity-30" />
+                    <path id="bus-mem-ir" d="M0,0" stroke="#d97706" stroke-width="3" fill="none" class="opacity-30" />
+                    <path id="bus-ir-dec" d="M0,0" stroke="#dc2626" stroke-width="3" fill="none" class="opacity-30" />
+                    <path id="bus-dec-reg" d="M0,0" stroke="#dc2626" stroke-width="3" fill="none" class="opacity-30" />
+                    <path id="bus-alu-in" d="M0,0" stroke="#16a34a" stroke-width="3" fill="none" class="opacity-30" />
+                    <path id="bus-alu-out" d="M0,0" stroke="#16a34a" stroke-width="3" fill="none" class="opacity-30" />
+                    <path id="bus-alu-cc" d="M0,0" stroke="#0891b2" stroke-width="3" fill="none" class="opacity-30" />
+                </svg>
+
+                <div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-3 h-full">
+                    
+                    <!-- Left Column: Control Unit (PC, IR, Decoder, CC Register) -->
+                    <div class="flex flex-col gap-2.5 justify-between">
+                        
+                        <!-- Program Counter (PC) -->
+                        <div id="unit-pc" class="bg-blue-50 border-2 border-blue-500 rounded-xl p-2.5 shadow-sm transition-all duration-300">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-black text-blue-700 uppercase flex items-center gap-1">
+                                    <i class="fa-solid fa-list-ol"></i> プログラムカウンタ (PC)
+                                </span>
+                                <span class="text-[10px] bg-blue-200 text-blue-900 font-extrabold px-1.5 py-0.5 rounded">アドレス記憶</span>
+                            </div>
+                            <div class="mt-1.5 flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-600">次に実行する番地:</span>
+                                <span id="val-pc" class="text-xl font-black text-blue-600 font-mono bg-white px-3 py-0.5 border border-blue-300 rounded-lg shadow-inner">0</span>
+                            </div>
+                        </div>
+
+                        <!-- Instruction Register (IR) -->
+                        <div id="unit-ir" class="bg-amber-50 border-2 border-amber-500 rounded-xl p-2.5 shadow-sm transition-all duration-300">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-black text-amber-800 uppercase flex items-center gap-1">
+                                    <i class="fa-solid fa-box-archive"></i> 命令レジスタ (IR)
+                                </span>
+                                <span class="text-[10px] bg-amber-200 text-amber-900 font-extrabold px-1.5 py-0.5 rounded">フェッチ命令</span>
+                            </div>
+                            <div class="mt-1.5 flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-600">現在の命令:</span>
+                                <span id="val-ir" class="text-xs md:text-sm font-black text-amber-800 font-mono bg-white px-2 py-1 border border-amber-300 rounded-lg shadow-inner truncate max-w-[170px]">---</span>
+                            </div>
+                        </div>
+
+                        <!-- Instruction Decoder & Control Unit -->
+                        <div id="unit-decoder" class="bg-red-50 border-2 border-red-500 rounded-xl p-2.5 shadow-sm transition-all duration-300 flex-1 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs font-black text-red-700 uppercase flex items-center gap-1">
+                                        <i class="fa-solid fa-gears"></i> 命令解読器 & 制御装置
+                                    </span>
+                                </div>
+                                <p class="text-[10px] text-red-600 font-bold leading-tight">命令の意味を解読し、各装置へ制御信号を送出</p>
+                            </div>
+                            <div id="val-decoder" class="bg-white p-1.5 rounded-lg border border-red-200 text-xs font-black text-red-800 my-1 text-center font-mono min-h-[34px] flex items-center justify-center shadow-inner">
+                                待機中
+                            </div>
+                        </div>
+
+                        <!-- Condition Code Register (2bit) -->
+                        <div id="unit-cc" class="bg-cyan-50 border-2 border-cyan-500 rounded-xl p-2.5 shadow-sm transition-all duration-300">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-black text-cyan-800 uppercase flex items-center gap-1">
+                                    <i class="fa-solid fa-flag"></i> 条件コードレジスタ (2bit)
+                                </span>
+                                <span class="text-[10px] bg-cyan-200 text-cyan-900 font-extrabold px-1.5 py-0.5 rounded">判定フラグ</span>
+                            </div>
+                            <div class="mt-1.5 flex items-center justify-between">
+                                <span id="val-cc-label" class="text-xs font-bold text-cyan-900">00 : 計算結果が正</span>
+                                <span id="val-cc" class="text-base font-black text-cyan-700 font-mono bg-white px-2.5 py-0.5 border border-cyan-300 rounded-lg shadow-inner">00</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right Column: Registers & ALU (Reg A, Reg B, ALU) -->
+                    <div class="flex flex-col gap-2.5 justify-between">
+                        
+                        <!-- General Register A -->
+                        <div id="unit-rega" class="bg-emerald-50 border-2 border-emerald-500 rounded-xl p-2.5 shadow-sm transition-all duration-300">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-black text-emerald-800 uppercase flex items-center gap-1">
+                                    <i class="fa-solid fa-database"></i> 汎用レジスタ A
+                                </span>
+                                <span class="text-[10px] bg-emerald-200 text-emerald-900 font-extrabold px-1.5 py-0.5 rounded">データ保持</span>
+                            </div>
+                            <div class="mt-1 flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-600">値:</span>
+                                <span id="val-rega" class="text-xl font-black text-emerald-600 font-mono bg-white px-3 py-0.5 border border-emerald-300 rounded-lg shadow-inner">0</span>
+                            </div>
+                        </div>
+
+                        <!-- General Register B -->
+                        <div id="unit-regb" class="bg-purple-50 border-2 border-purple-500 rounded-xl p-2.5 shadow-sm transition-all duration-300">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-black text-purple-800 uppercase flex items-center gap-1">
+                                    <i class="fa-solid fa-database"></i> 汎用レジスタ B
+                                </span>
+                                <span class="text-[10px] bg-purple-200 text-purple-900 font-extrabold px-1.5 py-0.5 rounded">データ保持</span>
+                            </div>
+                            <div class="mt-1 flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-600">値:</span>
+                                <span id="val-regb" class="text-xl font-black text-purple-600 font-mono bg-white px-3 py-0.5 border border-purple-300 rounded-lg shadow-inner">0</span>
+                            </div>
+                        </div>
+
+                        <!-- Arithmetic Logic Unit (ALU) -->
+                        <div id="unit-alu" class="bg-green-100 border-2 border-green-600 rounded-xl p-2.5 shadow-sm transition-all duration-300 flex-1 flex flex-col justify-between">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-black text-green-900 uppercase flex items-center gap-1">
+                                    <i class="fa-solid fa-calculator"></i> 演算装置 (ALU)
+                                </span>
+                                <span class="text-[10px] bg-green-200 text-green-900 font-extrabold px-1.5 py-0.5 rounded">加算・減算・比較</span>
+                            </div>
+                            
+                            <!-- ALU Trapezoid Graphic -->
+                            <div class="my-1 flex justify-center items-center">
+                                <div class="relative w-32 h-14 bg-gradient-to-b from-green-500 to-green-600 text-white font-mono font-black text-lg flex items-center justify-center shadow-md" style="clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);">
+                                    <span id="val-alu-op" class="text-xl drop-shadow">+</span>
+                                </div>
+                            </div>
+                            
+                            <div class="text-[11px] text-slate-700 text-center font-bold">
+                                演算過程: <span id="val-alu-detail" class="font-mono text-emerald-800 font-extrabold">----</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Main Memory Panel (Addresses 0 ~ 15) -->
+            <div class="lg:col-span-4 bg-white border-2 border-slate-300 rounded-2xl p-3.5 shadow-md flex flex-col">
+                <div class="flex justify-between items-center mb-2 pb-1.5 border-b">
+                    <h2 class="text-sm font-black text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-memory text-blue-600"></i> 主記憶装置 (メモリ)
+                    </h2>
+                    <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border font-mono font-bold">0〜15番地</span>
+                </div>
+
+                <p class="text-[11px] text-slate-500 mb-2 font-medium">0〜9番地に「命令」、10番地以降に「数値データ」を格納します。</p>
+
+                <!-- Memory Table -->
+                <div class="flex-1 overflow-y-auto border border-slate-200 rounded-lg bg-slate-50 p-1">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-slate-200 text-[11px]">
+                                <th class="p-1 font-extrabold w-12 text-center">番地</th>
+                                <th class="p-1 font-extrabold">記憶内容 (命令 / データ)</th>
+                                <th class="p-1 font-extrabold w-12 text-center">種別</th>
+                            </tr>
+                        </thead>
+                        <tbody id="memoryTableBody">
+                            <!-- Dynamically generated rows -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Custom Memory Edit Toggle -->
+                <div class="mt-2.5 pt-2 border-t border-slate-100 flex justify-between items-center">
+                    <span class="text-[10px] text-slate-400 font-bold">※行をダブルクリックで直接書き換え可能</span>
+                    <button id="btnEditMemory" class="text-xs text-blue-600 hover:text-blue-800 font-black flex items-center gap-1">
+                        <i class="fa-solid fa-pen-to-square"></i> メモリ指定変更
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Educational Instructions & References -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            
+            <!-- Step Guide Card -->
+            <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+                <h3 class="text-xs font-black text-slate-700 uppercase mb-1.5 flex items-center gap-1">
+                    <i class="fa-solid fa-rotate text-blue-500"></i> プログラム実行の3ステップ
+                </h3>
+                <ol class="text-[11px] text-slate-600 space-y-1 pl-4 list-decimal font-medium leading-tight">
+                    <li><strong class="text-blue-600">① 命令取り出し (Fetch):</strong> PCが指す番地から命令を「命令レジスタ」へ読込、PCを+1する。</li>
+                    <li><strong class="text-amber-600">② 命令解読 (Decode):</strong> 「命令解読器」が命令とレジスタ・アドレス対象を解読。</li>
+                    <li><strong class="text-emerald-600">③ 命令実行 (Execute):</strong> ALUで加減算・比較を行ったり、レジスタ・メモリ間の転送やジャンプを実行。</li>
+                </ol>
+            </div>
+
+            <!-- Extended Instruction Set Table -->
+            <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+                <h3 class="text-xs font-black text-slate-700 uppercase mb-1 flex items-center gap-1">
+                    <i class="fa-solid fa-code text-red-500"></i> 実践問題29 仮想命令セット
+                </h3>
+                <div class="text-[10px] space-y-1 font-mono overflow-y-auto pr-1">
+                    <div class="flex justify-between border-b border-slate-100 pb-0.5">
+                        <span class="font-bold text-blue-600">READ x, y</span>
+                        <span class="text-slate-600">y番地のデータをx(A/B)へ呼出</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-0.5">
+                        <span class="font-bold text-purple-600">WRITE x, y</span>
+                        <span class="text-slate-600">レジスタyの値をx番地へ保存</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-0.5">
+                        <span class="font-bold text-green-600">ADD x, y</span>
+                        <span class="text-slate-600">xにyを加算し条件コード更新</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-0.5">
+                        <span class="font-bold text-emerald-600">SUB x, y</span>
+                        <span class="text-slate-600">xからyを減算し条件コード更新</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-0.5">
+                        <span class="font-bold text-amber-600">CMP x, y</span>
+                        <span class="text-slate-600">x-yの差を評価(条件コードのみ)</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-0.5">
+                        <span class="font-bold text-cyan-600">JP (n)</span>
+                        <span class="text-slate-600">条件コード00(正)ならn番地へ</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-0.5">
+                        <span class="font-bold text-cyan-600">JM (n)</span>
+                        <span class="text-slate-600">条件コード10(負)ならn番地へ</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-0.5">
+                        <span class="font-bold text-cyan-600">JNZ (n)</span>
+                        <span class="text-slate-600">条件コード0以外ならn番地へ</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-0.5">
+                        <span class="font-bold text-cyan-600">JZ (n)</span>
+                        <span class="text-slate-600">条件コード01(ゼロ)ならn番地へ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Condition Code Reference Card -->
+            <div class="bg-cyan-50 border border-cyan-200 rounded-xl p-3 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xs font-black text-cyan-900 uppercase mb-1 flex items-center gap-1">
+                        <i class="fa-solid fa-flag text-cyan-600"></i> 条件コードレジスタの値表
+                    </h3>
+                    <div class="text-[11px] text-cyan-900 font-mono space-y-1 mt-1">
+                        <div class="flex justify-between border-b border-cyan-200/60 pb-0.5">
+                            <span class="font-bold">00</span>
+                            <span>計算結果が 「正の値 (>0)」</span>
+                        </div>
+                        <div class="flex justify-between border-b border-cyan-200/60 pb-0.5">
+                            <span class="font-bold">01</span>
+                            <span>計算結果が 「0 (=0)」</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-bold">10</span>
+                            <span>計算結果が 「負の値 (<0)」</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-[10px] text-cyan-700 font-bold mt-2">
+                    ※ JNZ命令は条件コードが 00 または 10 (0以外) のときにジャンプします。
+                </p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- QUIZ MODAL DIALOG -->
+    <div id="quizModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
+        <div class="bg-white border-4 border-purple-600 rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-purple-700 to-indigo-700 text-white p-3.5 flex justify-between items-center shadow">
+                <div class="flex items-center gap-2">
+                    <span class="bg-yellow-400 text-purple-900 font-black p-1.5 rounded-lg text-lg flex items-center justify-center">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </span>
+                    <div>
+                        <h2 class="text-base font-extrabold leading-none">メモリ記憶内容 予測演習問題</h2>
+                        <p class="text-xs text-purple-200 mt-0.5 font-medium">プログラム実行後の指定番地の値を推測しよう！</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btnRegenerateQuiz" class="bg-purple-800 hover:bg-purple-900 text-yellow-300 font-bold text-xs px-2.5 py-1.5 rounded-lg border border-purple-500/50 transition flex items-center gap-1 active:scale-95" title="新しい問題セットを作成">
+                        <i class="fa-solid fa-arrows-rotate"></i> 問題を再生成
+                    </button>
+                    <button id="btnCloseQuiz" class="text-purple-200 hover:text-white text-xl font-bold p-1 rounded-lg hover:bg-purple-600/50 transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-4 overflow-y-auto space-y-4 flex-1">
+                <!-- Question Selector -->
+                <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <span id="quizNumberBadge" class="bg-purple-100 text-purple-800 text-xs font-black px-2.5 py-1 rounded-full border border-purple-200">
+                        問題 1 / 5
+                    </span>
+                    <div class="flex items-center gap-1.5">
+                        <button id="btnPrevQuiz" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-md text-xs transition">
+                            <i class="fa-solid fa-chevron-left mr-0.5"></i> 前の問題
+                        </button>
+                        <button id="btnNextQuiz" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-md text-xs transition">
+                            次の問題 <i class="fa-solid fa-chevron-right ml-0.5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Problem Statement Card -->
+                <div class="bg-purple-50/70 border-2 border-purple-200 rounded-xl p-3.5">
+                    <h3 id="quizTitle" class="text-sm font-black text-purple-900 mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-question text-purple-600"></i> 【問1】基本加算プログラムの実行結果
+                    </h3>
+                    <p id="quizQuestionText" class="text-xs md:text-sm font-bold text-slate-800 leading-relaxed">
+                        以下のプログラムを0番地から順に実行し、<span class="text-red-600 font-extrabold underline">STOP命令で停止したとき「12番地」に格納されている数値</span>はいくつか答えなさい。
+                    </p>
+                </div>
+
+                <!-- Program Code Preview in Quiz (縦一列スクロール表示に変更) -->
+                <div class="bg-slate-900 rounded-xl p-3 text-slate-100 font-mono text-xs shadow-inner">
+                    <div class="text-[10px] text-slate-400 font-sans border-b border-slate-700 pb-1 mb-1.5 flex justify-between">
+                        <span><i class="fa-solid fa-code text-blue-400"></i> 初期メモリ状態 (0〜15番地)</span>
+                        <span id="quizTargetAddressText" class="text-yellow-400 font-bold">ターゲット: 12番地</span>
+                    </div>
+                    <div id="quizCodeTable" class="flex flex-col max-h-48 overflow-y-auto space-y-1 pr-1 font-mono text-[11px]">
+                        <!-- Dynamic generated memory snippet (縦列) -->
+                    </div>
+                </div>
+
+                <!-- Multiple Choice / Answer Options -->
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-2">
+                        <i class="fa-solid fa-list-check text-purple-600 mr-1"></i> 解答の選択肢 (クリックして選択):
+                    </label>
+                    <div id="quizOptionsContainer" class="grid grid-cols-2 gap-2">
+                        <!-- Dynamic options buttons -->
+                    </div>
+                </div>
+
+                <!-- Action Bar & Explanation Card -->
+                <div class="pt-2 border-t border-slate-200 space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <button id="btnLoadToSim" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-3 py-2 rounded-lg transition flex items-center gap-1 shadow">
+                            <i class="fa-solid fa-play text-green-400"></i> シミュレータにロードして動かす
+                        </button>
+                        <button id="btnCheckAnswer" class="bg-purple-600 hover:bg-purple-700 text-white font-black text-xs md:text-sm px-5 py-2 rounded-lg shadow-md transition flex items-center gap-1 active:translate-y-0.5 disabled:opacity-50" disabled>
+                            <i class="fa-solid fa-check"></i> 回答を判定する
+                        </button>
+                    </div>
+
+                    <!-- Answer Feedback Banner -->
+                    <div id="quizFeedback" class="p-3 rounded-xl border-2 hidden transition-all">
+                        <div class="flex items-center gap-2 font-black text-sm mb-1">
+                            <span id="quizFeedbackIcon"></span>
+                            <span id="quizFeedbackResult"></span>
+                        </div>
+                        <p id="quizExplanation" class="text-xs font-medium leading-relaxed mt-1"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 実践問題29準拠 プログラムプリセット ---
+
+        // プログラムA: 2つの数の加算 (3 + 5 = 8)
+        const PRESET_A = {
+            0: "READ A, (10)",
+            1: "ADD A, (11)",
+            2: "WRITE (12), A",
+            3: "STOP",
+            10: "3",
+            11: "5",
+            12: "0"
+        };
+
+        // プログラムB: 減算と負の条件コード (3 - 5 = -2)
+        const PRESET_B = {
+            0: "READ A, (10)",
+            1: "SUB A, (11)",
+            2: "WRITE (12), A",
+            3: "STOP",
+            10: "3",
+            11: "5",
+            12: "0"
+        };
+
+        // プログラムC: 繰り返し処理・乗算 (5 × 3 = 15)
+        const PRESET_C = {
+            0: "READ A, (12)",  // A = 0
+            1: "READ B, (11)",  // B = 3 (カウンタ)
+            2: "ADD A, (10)",   // A = A + 5
+            3: "SUB B, (13)",   // B = B - 1
+            4: "JNZ (2)",       // B != 0 なら 2番地へジャンプ
+            5: "WRITE (12), A", // 結果15を12番地へ書き込み
+            6: "STOP",
+            10: "5",
+            11: "3",
+            12: "0",
+            13: "1"
+        };
+
+        // プログラムD: 複雑なループとCMP命令 (1+2+3+4+5 = 15)
+        const PRESET_D = {
+            0: "READ A, (12)",  // A = 0
+            1: "READ B, (11)",  // B = 1
+            2: "ADD A, B",      // A = A + B
+            3: "ADD B, (11)",   // B = B + 1
+            4: "CMP B, (10)",   // Bと6を比較
+            5: "JNZ (2)",       // B != 6 なら 2番地へ
+            6: "WRITE (12), A", // 12番地へ保存
+            7: "STOP",
+            10: "6",
+            11: "1",
+            12: "0"
+        };
+
+        // チャレンジ問題: 3つの数の加算 (7 + 1 + 9 = 17)
+        const PRESET_CHALLENGE = {
+            0: "READ A, (10)",
+            1: "ADD A, (11)",
+            2: "ADD A, (12)",
+            3: "WRITE (13), A",
+            4: "STOP",
+            10: "7",
+            11: "1",
+            12: "9",
+            13: "0"
+        };
+
+        // クイズ保持リスト
+        let QUIZ_LIST = [];
+
+        // --- クイズ問題の動的・ランダム生成関数 ---
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function generateQuizQuestions() {
+            QUIZ_LIST = [];
+
+            // 【問1】加算
+            const val1_10 = getRandomInt(2, 15);
+            const val1_11 = getRandomInt(1, 15);
+            const ans1 = val1_10 + val1_11;
+            const options1 = shuffleArray(Array.from(new Set([
+                String(ans1),
+                String(val1_10),
+                String(val1_11),
+                String(ans1 + getRandomInt(1, 3)),
+                String(Math.abs(val1_10 - val1_11))
+            ])).slice(0, 4));
+
+            QUIZ_LIST.push({
+                id: 1,
+                title: "【問1】2数の加算プログラムの推測",
+                question: "以下のプログラムを実行してSTOP命令で停止したとき、12番地に格納される数値データは何になりますか？",
+                targetAddress: 12,
+                memory: {
+                    0: "READ A, (10)",
+                    1: "ADD A, (11)",
+                    2: "WRITE (12), A",
+                    3: "STOP",
+                    10: String(val1_10),
+                    11: String(val1_11),
+                    12: "0"
+                },
+                options: options1,
+                correctAnswer: String(ans1),
+                explanation: `10番地(${val1_10})をレジスタAに読み込み、11番地(${val1_11})を加算(${val1_10} + ${val1_11} = ${ans1})して12番地へ書き込んでいるため、12番地は「${ans1}」になります。`
+            });
+
+            // 【問2】減算
+            const val2_10 = getRandomInt(1, 12);
+            const val2_11 = getRandomInt(1, 15);
+            const ans2 = val2_10 - val2_11;
+            const options2 = shuffleArray(Array.from(new Set([
+                String(ans2),
+                String(val2_10 + val2_11),
+                String(Math.abs(ans2)),
+                String(ans2 - 1),
+                "0"
+            ])).slice(0, 4));
+
+            QUIZ_LIST.push({
+                id: 2,
+                title: "【問2】減算処理と条件コード",
+                question: "以下のプログラムを実行してSTOP命令で停止したとき、12番地に格納される数値データは何になりますか？",
+                targetAddress: 12,
+                memory: {
+                    0: "READ A, (10)",
+                    1: "SUB A, (11)",
+                    2: "WRITE (12), A",
+                    3: "STOP",
+                    10: String(val2_10),
+                    11: String(val2_11),
+                    12: "0"
+                },
+                options: options2,
+                correctAnswer: String(ans2),
+                explanation: `10番地(${val2_10})から11番地(${val2_11})をSUB(減算)するため、レジスタAは「${val2_10} - ${val2_11} = ${ans2}」となり、12番地に「${ans2}」が保存されます。`
+            });
+
+            // 【問3】繰り返し処理(乗算)
+            const m3 = getRandomInt(2, 6); // 加算する数
+            const n3 = getRandomInt(2, 4); // 回数
+            const ans3 = m3 * n3;
+            const options3 = shuffleArray(Array.from(new Set([
+                String(ans3),
+                String(m3 + n3),
+                String(m3 * (n3 + 1)),
+                String(ans3 - m3),
+                "0"
+            ])).slice(0, 4));
+
+            QUIZ_LIST.push({
+                id: 3,
+                title: "【問3】繰り返し（ループ）処理と乗算",
+                question: "以下のプログラムを実行してSTOP命令で停止したとき、12番地に格納される数値データは何になりますか？",
+                targetAddress: 12,
+                memory: {
+                    0: "READ A, (12)",
+                    1: "READ B, (11)",
+                    2: "ADD A, (10)",
+                    3: "SUB B, (13)",
+                    4: "JNZ (2)",
+                    5: "WRITE (12), A",
+                    6: "STOP",
+                    10: String(m3),
+                    11: String(n3),
+                    12: "0",
+                    13: "1"
+                },
+                options: options3,
+                correctAnswer: String(ans3),
+                explanation: `カウンタB=${n3}を用いて、レジスタA(初期値0)に10番地(${m3})を${n3}回足し合わせる処理(${m3} × ${n3})を行い、12番地に書き込むため「${ans3}」となります。`
+            });
+
+            // 【問4】CMPと総和ループ (1〜kまでの和)
+            const k4 = getRandomInt(3, 6); // 1~kまでの和
+            let ans4 = 0;
+            for (let i = 1; i <= k4; i++) ans4 += i;
+            const limit4 = k4 + 1; // CMP B, (10)
+
+            const options4 = shuffleArray(Array.from(new Set([
+                String(ans4),
+                String(ans4 + limit4),
+                String(ans4 - k4),
+                String(limit4),
+                String(k4 * 2)
+            ])).slice(0, 4));
+
+            QUIZ_LIST.push({
+                id: 4,
+                title: "【問4】1から指定数までの総和計算 (CMP比較)",
+                question: "以下のプログラムを実行してSTOP命令で停止したとき、12番地に格納される数値データは何になりますか？",
+                targetAddress: 12,
+                memory: {
+                    0: "READ A, (12)",
+                    1: "READ B, (11)",
+                    2: "ADD A, B",
+                    3: "ADD B, (11)",
+                    4: "CMP B, (10)",
+                    5: "JNZ (2)",
+                    6: "WRITE (12), A",
+                    7: "STOP",
+                    10: String(limit4),
+                    11: "1",
+                    12: "0"
+                },
+                options: options4,
+                correctAnswer: String(ans4),
+                explanation: `Bが1から順に1ずつ加算され、Aに1から${k4}までが累加(${Array.from({length: k4}, (_, i) => i+1).join('+')}=${ans4})されます。Bが${limit4}になったときCMP命令で差が0(JZ成立)となりループを抜けるため「${ans4}」になります。`
+            });
+
+            // 【問5】3数の加算
+            const c5_10 = getRandomInt(1, 9);
+            const c5_11 = getRandomInt(1, 9);
+            const c5_12 = getRandomInt(1, 9);
+            const ans5 = c5_10 + c5_11 + c5_12;
+
+            const options5 = shuffleArray(Array.from(new Set([
+                String(ans5),
+                String(c5_10 + c5_11),
+                String(ans5 + 2),
+                String(ans5 - 1),
+                String(c5_10 + c5_12)
+            ])).slice(0, 4));
+
+            QUIZ_LIST.push({
+                id: 5,
+                title: "【問5】3つの数値データの連続加算",
+                question: "以下のプログラムを実行してSTOP命令で停止したとき、13番地に格納される数値データは何になりますか？",
+                targetAddress: 13,
+                memory: {
+                    0: "READ A, (10)",
+                    1: "ADD A, (11)",
+                    2: "ADD A, (12)",
+                    3: "WRITE (13), A",
+                    4: "STOP",
+                    10: String(c5_10),
+                    11: String(c5_11),
+                    12: String(c5_12),
+                    13: "0"
+                },
+                options: options5,
+                correctAnswer: String(ans5),
+                explanation: `10番地(${c5_10})、11番地(${c5_11})、12番地(${c5_12})の3つの値をレジスタAに次々と足し合わせ(${c5_10} + ${c5_11} + ${c5_12} = ${ans5})、13番地へ保存するため「${ans5}」となります。`
+            });
+        }
+
+        // シミュレータ状態変数
+        let memory = { ...PRESET_A };
+        let pc = 0;              // プログラムカウンタ (初期値 0)
+        let ir = "---";          // 命令レジスタ
+        let regA = 0;            // 汎用レジスタA
+        let regB = 0;            // 汎用レジスタB
+        let conditionCode = "00"; // 条件コードレジスタ ("00": 正, "01": 0, "10": 負)
+        
+        let microStep = 0;       // 0: Fetch, 1: Decode, 2: Execute
+        let totalStepCount = 0;  // 実行カウント
+        let isRunning = false;   // 自動実行中フラグ
+        let autoInterval = null; // タイマー
+
+        // クイズ状態変数
+        let currentQuizIndex = 0;
+        let selectedOption = null;
+
+        // DOM要素取得
+        const valPcEl = document.getElementById('val-pc');
+        const valIrEl = document.getElementById('val-ir');
+        const valRegAEl = document.getElementById('val-rega');
+        const valRegBEl = document.getElementById('val-regb');
+        const valCcEl = document.getElementById('val-cc');
+        const valCcLabelEl = document.getElementById('val-cc-label');
+        const valDecoderEl = document.getElementById('val-decoder');
+        const valAluOpEl = document.getElementById('val-alu-op');
+        const valAluDetailEl = document.getElementById('val-alu-detail');
+
+        const infoPCEl = document.getElementById('infoPC');
+        const infoIREl = document.getElementById('infoIR');
+        const infoRegAEl = document.getElementById('infoRegA');
+        const infoRegBEl = document.getElementById('infoRegB');
+        const infoCCEl = document.getElementById('infoCC');
+
+        const phaseBadgeEl = document.getElementById('phaseBadge');
+        const phaseCardEl = document.getElementById('phaseCard');
+        const statusDescEl = document.getElementById('statusDescription');
+        const stepCounterEl = document.getElementById('stepCounter');
+        const memoryTableBody = document.getElementById('memoryTableBody');
+
+        const btnStep = document.getElementById('btnStep');
+        const btnAuto = document.getElementById('btnAuto');
+        const btnReset = document.getElementById('btnReset');
+        const presetSelect = document.getElementById('presetSelect');
+        const speedSlider = document.getElementById('speedSlider');
+
+        // クイズ関連DOM
+        const btnOpenQuiz = document.getElementById('btnOpenQuiz');
+        const btnRegenerateQuiz = document.getElementById('btnRegenerateQuiz');
+        const btnCloseQuiz = document.getElementById('btnCloseQuiz');
+        const quizModal = document.getElementById('quizModal');
+        const quizNumberBadge = document.getElementById('quizNumberBadge');
+        const quizTitle = document.getElementById('quizTitle');
+        const quizQuestionText = document.getElementById('quizQuestionText');
+        const quizTargetAddressText = document.getElementById('quizTargetAddressText');
+        const quizCodeTable = document.getElementById('quizCodeTable');
+        const quizOptionsContainer = document.getElementById('quizOptionsContainer');
+        const btnCheckAnswer = document.getElementById('btnCheckAnswer');
+        const btnLoadToSim = document.getElementById('btnLoadToSim');
+        const quizFeedback = document.getElementById('quizFeedback');
+        const quizFeedbackIcon = document.getElementById('quizFeedbackIcon');
+        const quizFeedbackResult = document.getElementById('quizFeedbackResult');
+        const quizExplanation = document.getElementById('quizExplanation');
+        const btnPrevQuiz = document.getElementById('btnPrevQuiz');
+        const btnNextQuiz = document.getElementById('btnNextQuiz');
+
+        // CPUユニットエレメント
+        const unitPc = document.getElementById('unit-pc');
+        const unitIr = document.getElementById('unit-ir');
+        const unitDecoder = document.getElementById('unit-decoder');
+        const unitCc = document.getElementById('unit-cc');
+        const unitRegA = document.getElementById('unit-rega');
+        const unitRegB = document.getElementById('unit-regb');
+        const unitAlu = document.getElementById('unit-alu');
+
+        // --- 動的バス描画 ---
+        function updateBusLines() {
+            const getCenter = (el) => {
+                const rect = el.getBoundingClientRect();
+                const parentRect = document.getElementById('busSvg').getBoundingClientRect();
+                return {
+                    x: rect.left + rect.width / 2 - parentRect.left,
+                    y: rect.top + rect.height / 2 - parentRect.top
+                };
+            };
+
+            const pcPos = getCenter(unitPc);
+            const irPos = getCenter(unitIr);
+            const decPos = getCenter(unitDecoder);
+            const regAPos = getCenter(unitRegA);
+            const aluPos = getCenter(unitAlu);
+            const ccPos = getCenter(unitCc);
+
+            document.getElementById('bus-pc-mem').setAttribute('d', `M ${pcPos.x} ${pcPos.y} L ${pcPos.x + 120} ${pcPos.y}`);
+            document.getElementById('bus-mem-ir').setAttribute('d', `M ${pcPos.x + 120} ${irPos.y} L ${irPos.x} ${irPos.y}`);
+            document.getElementById('bus-ir-dec').setAttribute('d', `M ${irPos.x} ${irPos.y + 20} L ${decPos.x} ${decPos.y - 20}`);
+            document.getElementById('bus-dec-reg').setAttribute('d', `M ${decPos.x + 40} ${decPos.y} L ${regAPos.x - 40} ${regAPos.y}`);
+            document.getElementById('bus-alu-in').setAttribute('d', `M ${regAPos.x} ${regAPos.y + 20} L ${aluPos.x} ${aluPos.y - 20}`);
+            document.getElementById('bus-alu-out').setAttribute('d', `M ${aluPos.x - 30} ${aluPos.y} Q ${aluPos.x - 70} ${aluPos.y - 40} ${regAPos.x} ${regAPos.y + 30}`);
+            document.getElementById('bus-alu-cc').setAttribute('d', `M ${aluPos.x - 40} ${aluPos.y} L ${ccPos.x + 40} ${ccPos.y}`);
+        }
+
+        // 条件コードの更新ヘルパー
+        function updateConditionCode(val) {
+            if (val > 0) {
+                conditionCode = "00";
+                valCcLabelEl.innerText = "00 : 計算結果が正";
+            } else if (val === 0) {
+                conditionCode = "01";
+                valCcLabelEl.innerText = "01 : 計算結果が0";
+            } else {
+                conditionCode = "10";
+                valCcLabelEl.innerText = "10 : 計算結果が負";
+            }
+            valCcEl.innerText = conditionCode;
+            
+            let labelText = conditionCode === "00" ? "00 (正)" : (conditionCode === "01" ? "01 (ゼロ)" : "10 (負)");
+            infoCCEl.innerText = labelText;
+        }
+
+        // --- メモリテーブルの更新描画 ---
+        function renderMemoryTable() {
+            memoryTableBody.innerHTML = '';
+            
+            for (let addr = 0; addr <= 15; addr++) {
+                const val = memory[addr] || "";
+                const tr = document.createElement('tr');
+                
+                let isCurrentPC = (addr === pc);
+                let rowBg = isCurrentPC ? 'bg-blue-100 font-bold' : (addr % 2 === 0 ? 'bg-white' : 'bg-slate-50');
+                
+                let typeBadge = '<span class="text-[10px] text-slate-400">-</span>';
+                if (val.match(/READ|WRITE|ADD|SUB|CMP|JP|JM|JNZ|JZ|STOP/)) {
+                    typeBadge = '<span class="text-[10px] bg-blue-100 text-blue-800 px-1 rounded font-black">命令</span>';
+                } else if (val !== "") {
+                    typeBadge = '<span class="text-[10px] bg-emerald-100 text-emerald-800 px-1 rounded font-black">データ</span>';
+                }
+
+                tr.className = `${rowBg} border-b border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer`;
+                tr.setAttribute('id', `mem-row-${addr}`);
+                
+                tr.innerHTML = `
+                    <td class="p-1 text-center font-mono font-bold ${isCurrentPC ? 'text-blue-600' : 'text-slate-500'}">
+                        ${isCurrentPC ? '<i class="fa-solid fa-right-long text-blue-600 mr-0.5"></i>' : ''}${addr}
+                    </td>
+                    <td class="p-1 font-mono text-slate-800 font-bold text-[11px]">${val}</td>
+                    <td class="p-1 text-center">${typeBadge}</td>
+                `;
+
+                tr.addEventListener('dblclick', () => editMemoryAddress(addr));
+                memoryTableBody.appendChild(tr);
+            }
+        }
+
+        function editMemoryAddress(addr) {
+            const current = memory[addr] || "";
+            const newVal = prompt(`【番地 ${addr}】の記憶内容を入力してください:\n例: READ A, (10) や 数値 5 など`, current);
+            if (newVal !== null) {
+                memory[addr] = newVal.trim();
+                renderMemoryTable();
+            }
+        }
+
+        function clearHighlights() {
+            [unitPc, unitIr, unitDecoder, unitCc, unitRegA, unitRegB, unitAlu].forEach(u => {
+                u.classList.remove('highlight-blue', 'highlight-red', 'highlight-yellow', 'highlight-green', 'highlight-purple', 'highlight-cyan', 'pulse-element');
+            });
+            
+            document.querySelectorAll('path').forEach(p => {
+                p.classList.remove('data-bus-line');
+                p.setAttribute('stroke-width', '3');
+                p.style.opacity = '0.3';
+            });
+        }
+
+        function highlightBus(busId, color = '#2563eb') {
+            const path = document.getElementById(busId);
+            if (path) {
+                path.classList.add('data-bus-line');
+                path.setAttribute('stroke', color);
+                path.setAttribute('stroke-width', '5');
+                path.style.opacity = '1';
+            }
+        }
+
+        // --- 命令実行メイン処理 (シミュレーション・マイクロステップ) ---
+        function stepSimulation() {
+            clearHighlights();
+
+            const currentMemValue = memory[pc] || "STOP";
+
+            if (ir.startsWith("STOP") && microStep === 0) {
+                phaseBadgeEl.className = "bg-red-600 text-white font-bold text-xs px-2.5 py-0.5 rounded-full uppercase";
+                phaseBadgeEl.innerText = "プログラム停止 (STOP)";
+                statusDescEl.innerText = "プログラムがSTOP命令により正常に停止しました。「リセット」で最初から実行できます。";
+                stopAuto();
+                return;
+            }
+
+            totalStepCount++;
+            stepCounterEl.innerText = `実行回数: ${totalStepCount}`;
+
+            if (microStep === 0) {
+                // FETCH
+                phaseBadgeEl.className = "bg-blue-600 text-white font-bold text-xs px-2.5 py-0.5 rounded-full uppercase";
+                phaseBadgeEl.innerText = "① 命令取り出し (Fetch)";
+                phaseCardEl.className = "lg:col-span-7 bg-white border-2 border-blue-500 rounded-xl p-3 shadow-sm flex flex-col justify-between transition-all";
+
+                unitPc.classList.add('highlight-blue', 'pulse-element');
+                unitIr.classList.add('highlight-yellow');
+                
+                const memRow = document.getElementById(`mem-row-${pc}`);
+                if (memRow) memRow.classList.add('bg-yellow-200');
+
+                ir = currentMemValue;
+                valIrEl.innerText = ir;
+
+                statusDescEl.innerHTML = `プログラムカウンタ(<span class="text-blue-600 font-bold">${pc}番地</span>)が示す主記憶装置から命令「<span class="text-amber-700 font-bold">${ir}</span>」を取り出して<strong class="text-amber-800">命令レジスタ(IR)</strong>に読み込みました。`;
+
+                highlightBus('bus-pc-mem', '#2563eb');
+                highlightBus('bus-mem-ir', '#d97706');
+
+                pc++;
+                valPcEl.innerText = pc;
+                microStep = 1;
+
+            } else if (microStep === 1) {
+                // DECODE
+                phaseBadgeEl.className = "bg-amber-600 text-white font-bold text-xs px-2.5 py-0.5 rounded-full uppercase";
+                phaseBadgeEl.innerText = "② 命令解読 (Decode)";
+                phaseCardEl.className = "lg:col-span-7 bg-white border-2 border-amber-500 rounded-xl p-3 shadow-sm flex flex-col justify-between transition-all";
+
+                unitIr.classList.add('highlight-yellow');
+                unitDecoder.classList.add('highlight-red', 'pulse-element');
+                highlightBus('bus-ir-dec', '#dc2626');
+
+                let decodeMsg = "";
+                const cleanIr = ir.replace(/\s+/g, ' ');
+
+                if (cleanIr.startsWith("READ")) decodeMsg = `「指定のアドレスからデータを読み込みレジスタへ転送せよ」と解読`;
+                else if (cleanIr.startsWith("WRITE")) decodeMsg = `「レジスタのデータを指定のアドレスへ書き込め」と解読`;
+                else if (cleanIr.startsWith("ADD")) decodeMsg = `「レジスタと対象の値を加算し結果をレジスタに格納せよ」と解読`;
+                else if (cleanIr.startsWith("SUB")) decodeMsg = `「レジスタから対象の値を減算し結果をレジスタに格納せよ」と解読`;
+                else if (cleanIr.startsWith("CMP")) decodeMsg = `「2つの値を比較し差に応じて条件コードレジスタを更新せよ」と解読`;
+                else if (cleanIr.startsWith("JNZ")) decodeMsg = `「条件コードが00または10(0以外)なら指定番地へジャンプせよ」と解読`;
+                else if (cleanIr.startsWith("JZ")) decodeMsg = `「条件コードが01(0)なら指定番地へジャンプせよ」と解読`;
+                else if (cleanIr.startsWith("JP")) decodeMsg = `「条件コードが00(正)なら指定番地へジャンプせよ」と解読`;
+                else if (cleanIr.startsWith("JM")) decodeMsg = `「条件コードが10(負)なら指定番地へジャンプせよ」と解読`;
+                else if (cleanIr.startsWith("STOP")) decodeMsg = "「プログラムの実行を停止せよ」と解読";
+                else decodeMsg = "未知の命令です";
+
+                valDecoderEl.innerText = decodeMsg;
+                statusDescEl.innerHTML = `<strong class="text-red-600">命令解読器</strong>が命令「<span class="text-amber-800 font-bold">${ir}</span>」を解析しました。<br><span class="text-slate-700 font-semibold">👉 ${decodeMsg}</span>`;
+
+                microStep = 2;
+
+            } else if (microStep === 2) {
+                // EXECUTE
+                phaseBadgeEl.className = "bg-emerald-600 text-white font-bold text-xs px-2.5 py-0.5 rounded-full uppercase";
+                phaseBadgeEl.innerText = "③ 命令実行 (Execute)";
+                phaseCardEl.className = "lg:col-span-7 bg-white border-2 border-emerald-500 rounded-xl p-3 shadow-sm flex flex-col justify-between transition-all";
+
+                highlightBus('bus-dec-reg', '#dc2626');
+                const cleanIr = ir.replace(/\s+/g, ' ');
+
+                if (cleanIr.startsWith("READ")) {
+                    const regMatch = cleanIr.match(/READ\s+([AB]),\s*\(?(\d+)\)?/i);
+                    if (regMatch) {
+                        const targetReg = regMatch[1].toUpperCase();
+                        const targetAddr = parseInt(regMatch[2]);
+                        const val = parseInt(memory[targetAddr] || "0");
+
+                        if (targetReg === "A") {
+                            regA = val;
+                            valRegAEl.innerText = regA;
+                            unitRegA.classList.add('highlight-green', 'pulse-element');
+                        } else {
+                            regB = val;
+                            valRegBEl.innerText = regB;
+                            unitRegB.classList.add('highlight-purple', 'pulse-element');
+                        }
+
+                        const memRow = document.getElementById(`mem-row-${targetAddr}`);
+                        if (memRow) memRow.classList.add('bg-emerald-200');
+
+                        statusDescEl.innerHTML = `主記憶装置の<strong class="text-blue-600">${targetAddr}番地</strong>からデータ「<strong class="text-emerald-700">${val}</strong>」を読み出し、<strong class="text-emerald-700">レジスタ${targetReg}</strong>へ格納しました。`;
+                    }
+
+                } else if (cleanIr.startsWith("WRITE")) {
+                    const writeMatch = cleanIr.match(/WRITE\s*\(?(\d+)\)?,\s*([AB])/i);
+                    if (writeMatch) {
+                        const targetAddr = parseInt(writeMatch[1]);
+                        const srcReg = writeMatch[2].toUpperCase();
+                        const val = srcReg === "A" ? regA : regB;
+
+                        memory[targetAddr] = String(val);
+
+                        if (srcReg === "A") unitRegA.classList.add('highlight-green');
+                        else unitRegB.classList.add('highlight-purple');
+
+                        const memRow = document.getElementById(`mem-row-${targetAddr}`);
+                        if (memRow) memRow.classList.add('bg-emerald-300', 'pulse-element');
+
+                        statusDescEl.innerHTML = `レジスタ${srcReg}の値「<strong class="text-emerald-700 text-sm">${val}</strong>」を、主記憶装置の<strong class="text-blue-600">${targetAddr}番地</strong>に書き込んで保存しました！`;
+                    }
+
+                } else if (cleanIr.startsWith("ADD")) {
+                    const addRegMem = cleanIr.match(/ADD\s+([AB]),\s*\(?(\d+)\)?/i);
+                    const addRegReg = cleanIr.match(/ADD\s+([AB]),\s*([AB])/i);
+
+                    let destReg, operandVal, oldVal;
+
+                    if (addRegMem) {
+                        destReg = addRegMem[1].toUpperCase();
+                        const targetAddr = parseInt(addRegMem[2]);
+                        operandVal = parseInt(memory[targetAddr] || "0");
+                        oldVal = destReg === "A" ? regA : regB;
+
+                        const memRow = document.getElementById(`mem-row-${targetAddr}`);
+                        if (memRow) memRow.classList.add('bg-emerald-200');
+                    } else if (addRegReg) {
+                        destReg = addRegReg[1].toUpperCase();
+                        const srcReg = addRegReg[2].toUpperCase();
+                        oldVal = destReg === "A" ? regA : regB;
+                        operandVal = srcReg === "A" ? regA : regB;
+
+                        if (srcReg === "A") unitRegA.classList.add('highlight-green');
+                        else unitRegB.classList.add('highlight-purple');
+                    }
+
+                    const result = oldVal + operandVal;
+                    if (destReg === "A") {
+                        regA = result;
+                        valRegAEl.innerText = regA;
+                        unitRegA.classList.add('highlight-green', 'pulse-element');
+                    } else {
+                        regB = result;
+                        valRegBEl.innerText = regB;
+                        unitRegB.classList.add('highlight-purple', 'pulse-element');
+                    }
+
+                    unitAlu.classList.add('highlight-green', 'pulse-element');
+                    unitCc.classList.add('highlight-cyan');
+                    valAluOpEl.innerText = "+";
+                    valAluDetailEl.innerText = `${oldVal} + ${operandVal} = ${result}`;
+
+                    updateConditionCode(result);
+                    highlightBus('bus-alu-in', '#16a34a');
+                    highlightBus('bus-alu-out', '#16a34a');
+                    highlightBus('bus-alu-cc', '#0891b2');
+
+                    statusDescEl.innerHTML = `<strong class="text-green-700">ALU(演算装置)</strong>で「${oldVal} + ${operandVal} = <strong class="text-emerald-700">${result}</strong>」を加算！<br>結果をレジスタ${destReg}に保存し、条件コードレジスタを「<strong class="text-cyan-700">${conditionCode}</strong>」に変更しました。`;
+
+                } else if (cleanIr.startsWith("SUB")) {
+                    const subRegMem = cleanIr.match(/SUB\s+([AB]),\s*\(?(\d+)\)?/i);
+                    const subRegReg = cleanIr.match(/SUB\s+([AB]),\s*([AB])/i);
+
+                    let destReg, operandVal, oldVal;
+
+                    if (subRegMem) {
+                        destReg = subRegMem[1].toUpperCase();
+                        const targetAddr = parseInt(subRegMem[2]);
+                        operandVal = parseInt(memory[targetAddr] || "0");
+                        oldVal = destReg === "A" ? regA : regB;
+
+                        const memRow = document.getElementById(`mem-row-${targetAddr}`);
+                        if (memRow) memRow.classList.add('bg-emerald-200');
+                    } else if (subRegReg) {
+                        destReg = subRegReg[1].toUpperCase();
+                        const srcReg = subRegReg[2].toUpperCase();
+                        oldVal = destReg === "A" ? regA : regB;
+                        operandVal = srcReg === "A" ? regA : regB;
+                    }
+
+                    const result = oldVal - operandVal;
+                    if (destReg === "A") {
+                        regA = result;
+                        valRegAEl.innerText = regA;
+                        unitRegA.classList.add('highlight-green', 'pulse-element');
+                    } else {
+                        regB = result;
+                        valRegBEl.innerText = regB;
+                        unitRegB.classList.add('highlight-purple', 'pulse-element');
+                    }
+
+                    unitAlu.classList.add('highlight-green', 'pulse-element');
+                    unitCc.classList.add('highlight-cyan');
+                    valAluOpEl.innerText = "-";
+                    valAluDetailEl.innerText = `${oldVal} - ${operandVal} = ${result}`;
+
+                    updateConditionCode(result);
+                    highlightBus('bus-alu-in', '#16a34a');
+                    highlightBus('bus-alu-out', '#16a34a');
+                    highlightBus('bus-alu-cc', '#0891b2');
+
+                    statusDescEl.innerHTML = `<strong class="text-green-700">ALU(演算装置)</strong>で「${oldVal} - ${operandVal} = <strong class="text-emerald-700">${result}</strong>」を減算！<br>条件コードレジスタは「<strong class="text-cyan-700">${conditionCode}</strong>」になりました。`;
+
+                } else if (cleanIr.startsWith("CMP")) {
+                    const cmpRegMem = cleanIr.match(/CMP\s+([AB]),\s*\(?(\d+)\)?/i);
+                    const cmpRegReg = cleanIr.match(/CMP\s+([AB]),\s*([AB])/i);
+
+                    let val1 = 0, val2 = 0;
+                    if (cmpRegMem) {
+                        const r = cmpRegMem[1].toUpperCase();
+                        val1 = r === "A" ? regA : regB;
+                        val2 = parseInt(memory[parseInt(cmpRegMem[2])] || "0");
+                    } else if (cmpRegReg) {
+                        val1 = cmpRegReg[1].toUpperCase() === "A" ? regA : regB;
+                        val2 = cmpRegReg[2].toUpperCase() === "A" ? regA : regB;
+                    }
+
+                    const diff = val1 - val2;
+                    unitAlu.classList.add('highlight-green');
+                    unitCc.classList.add('highlight-cyan', 'pulse-element');
+                    valAluOpEl.innerText = "CMP";
+                    valAluDetailEl.innerText = `比較: ${val1} - ${val2} (${diff})`;
+
+                    updateConditionCode(diff);
+                    highlightBus('bus-alu-cc', '#0891b2');
+
+                    statusDescEl.innerHTML = `レジスタの値(${val1})と対象のデータ(${val2})を比較(<strong class="text-green-700">${val1} - ${val2} = ${diff}</strong>)。<br>レジスタの値は変更せず、条件コードのみ「<strong class="text-cyan-700">${conditionCode}</strong>」に更新しました。`;
+
+                } else if (cleanIr.match(/JNZ|JZ|JP|JM/)) {
+                    const jmpMatch = cleanIr.match(/(JNZ|JZ|JP|JM)\s*\(?(\d+)\)?/i);
+                    if (jmpMatch) {
+                        const op = jmpMatch[1].toUpperCase();
+                        const jumpTarget = parseInt(jmpMatch[2]);
+                        let doJump = false;
+
+                        if (op === "JNZ" && (conditionCode === "00" || conditionCode === "10")) doJump = true;
+                        if (op === "JZ" && conditionCode === "01") doJump = true;
+                        if (op === "JP" && conditionCode === "00") doJump = true;
+                        if (op === "JM" && conditionCode === "10") doJump = true;
+
+                        unitCc.classList.add('highlight-cyan');
+                        unitPc.classList.add('highlight-blue', 'pulse-element');
+
+                        if (doJump) {
+                            pc = jumpTarget;
+                            valPcEl.innerText = pc;
+                            statusDescEl.innerHTML = `条件コードが「<strong class="text-cyan-700">${conditionCode}</strong>」のため、<strong class="text-blue-600">${op}分岐条件成立</strong>！<br>プログラムカウンタ(PC)を <strong class="text-blue-600 text-sm">${jumpTarget}番地</strong> へ書き換えてジャンプしました。`;
+                        } else {
+                            statusDescEl.innerHTML = `条件コードが「<strong class="text-cyan-700">${conditionCode}</strong>」のため、<strong class="text-slate-500">${op}分岐条件不成立</strong>。<br>ジャンプせずそのまま次の番地へ進みます。`;
+                        }
+                    }
+
+                } else if (cleanIr.startsWith("STOP")) {
+                    statusDescEl.innerText = "プログラム停止命令を処理しました。";
+                }
+
+                renderMemoryTable();
+                microStep = 0;
+            }
+
+            infoPCEl.innerText = pc;
+            infoIREl.innerText = ir;
+            infoRegAEl.innerText = regA;
+            infoRegBEl.innerText = regB;
+        }
+
+        // --- 自動実行制御 ---
+        function toggleAutoRun() {
+            if (isRunning) stopAuto();
+            else startAuto();
+        }
+
+        function startAuto() {
+            isRunning = true;
+            btnAuto.classList.remove('bg-green-600', 'hover:bg-green-700');
+            btnAuto.classList.add('bg-orange-500', 'hover:bg-orange-600');
+            document.getElementById('autoIcon').className = "fa-solid fa-pause";
+            document.getElementById('autoText').innerText = "一時停止";
+
+            const speed = parseInt(speedSlider.value);
+            const intervalMs = 2100 - (speed * 350);
+
+            autoInterval = setInterval(() => {
+                stepSimulation();
+            }, intervalMs);
+        }
+
+        function stopAuto() {
+            isRunning = false;
+            if (autoInterval) clearInterval(autoInterval);
+            btnAuto.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+            btnAuto.classList.add('bg-green-600', 'hover:bg-green-700');
+            document.getElementById('autoIcon').className = "fa-solid fa-play";
+            document.getElementById('autoText').innerText = "自動実行";
+        }
+
+        // --- シミュレータリセット ---
+        function resetSimulation() {
+            stopAuto();
+            clearHighlights();
+            
+            pc = 0;
+            ir = "---";
+            regA = 0;
+            regB = 0;
+            updateConditionCode(0);
+
+            microStep = 0;
+            totalStepCount = 0;
+
+            valPcEl.innerText = pc;
+            valIrEl.innerText = ir;
+            valRegAEl.innerText = regA;
+            valRegBEl.innerText = regB;
+            valDecoderEl.innerText = "待機中";
+            valAluOpEl.innerText = "+";
+            valAluDetailEl.innerText = "----";
+
+            infoPCEl.innerText = pc;
+            infoIREl.innerText = ir;
+            infoRegAEl.innerText = regA;
+            infoRegBEl.innerText = regB;
+
+            phaseBadgeEl.className = "bg-amber-500 text-white font-black text-[11px] px-2.5 py-0.5 rounded-full uppercase";
+            phaseBadgeEl.innerText = "準備完了 (0番地)";
+            phaseCardEl.className = "lg:col-span-7 bg-white border-2 border-amber-400 rounded-xl p-3 shadow-sm flex flex-col justify-between transition-all";
+            statusDescEl.innerText = "「1ステップ進む」または「自動実行」を押してシミュレーションを開始してください。";
+            stepCounterEl.innerText = "実行回数: 0";
+
+            const presetKey = presetSelect.value;
+            if (presetKey === 'progA') memory = { ...PRESET_A };
+            else if (presetKey === 'progB') memory = { ...PRESET_B };
+            else if (presetKey === 'progC') memory = { ...PRESET_C };
+            else if (presetKey === 'progD') memory = { ...PRESET_D };
+            else if (presetKey === 'challenge') memory = { ...PRESET_CHALLENGE };
+
+            renderMemoryTable();
+            updateBusLines();
+        }
+
+        // --- 演習問題 (クイズ) ロジック ---
+        function renderQuiz(index) {
+            currentQuizIndex = index;
+            selectedOption = null;
+            
+            const q = QUIZ_LIST[currentQuizIndex];
+
+            quizNumberBadge.innerText = `問題 ${currentQuizIndex + 1} / ${QUIZ_LIST.length}`;
+            quizTitle.innerHTML = `<i class="fa-solid fa-circle-question text-purple-600"></i> ${q.title}`;
+            quizQuestionText.innerHTML = `${q.question.replace(/(\d+番地)/g, '<span class="text-red-600 font-extrabold underline">$1</span>')}`;
+            quizTargetAddressText.innerText = `ターゲット指定: ${q.targetAddress}番地`;
+
+            // コードプレビュー表の構築 (縦一列表示)
+            quizCodeTable.innerHTML = '';
+            for (let i = 0; i <= 15; i++) {
+                const val = q.memory[i];
+                if (val !== undefined && val !== "") {
+                    const isTarget = (i === q.targetAddress);
+                    const div = document.createElement('div');
+                    div.className = `flex justify-between items-center border-b border-slate-800 py-1 px-2 rounded ${isTarget ? 'bg-yellow-500/20 text-yellow-300 font-bold border border-yellow-500/50' : 'text-slate-300 hover:bg-slate-800/50'}`;
+                    div.innerHTML = `
+                        <span class="font-mono"><strong class="text-slate-500 w-12 inline-block">[${i}番地]</strong> ${val}</span>
+                        ${isTarget ? '<span class="text-[10px] bg-yellow-400 text-slate-900 px-1.5 py-0.5 rounded font-sans font-black shadow-sm">ターゲット (問)</span>' : ''}
+                    `;
+                    quizCodeTable.appendChild(div);
+                }
+            }
+
+            // 選択肢ボタンの構築
+            quizOptionsContainer.innerHTML = '';
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "quiz-opt-btn bg-slate-100 hover:bg-purple-100 border-2 border-slate-300 hover:border-purple-500 text-slate-800 font-black py-2 px-3 rounded-xl transition text-sm flex items-center justify-center gap-2";
+                btn.innerHTML = `<i class="fa-regular fa-circle text-slate-400"></i> <span>${opt}</span>`;
+                
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.quiz-opt-btn').forEach(b => {
+                        b.className = "quiz-opt-btn bg-slate-100 hover:bg-purple-100 border-2 border-slate-300 hover:border-purple-500 text-slate-800 font-black py-2 px-3 rounded-xl transition text-sm flex items-center justify-center gap-2";
+                        b.querySelector('i').className = "fa-regular fa-circle text-slate-400";
+                    });
+
+                    btn.className = "quiz-opt-btn bg-purple-600 border-2 border-purple-700 text-white font-black py-2 px-3 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow";
+                    btn.querySelector('i').className = "fa-solid fa-circle-check text-yellow-300";
+
+                    selectedOption = opt;
+                    btnCheckAnswer.disabled = false;
+                });
+
+                quizOptionsContainer.appendChild(btn);
+            });
+
+            // フィードバック非表示化
+            quizFeedback.classList.add('hidden');
+            btnCheckAnswer.disabled = true;
+
+            // 前後ボタンの制御
+            btnPrevQuiz.disabled = (currentQuizIndex === 0);
+            btnNextQuiz.disabled = (currentQuizIndex === QUIZ_LIST.length - 1);
+            btnPrevQuiz.style.opacity = (currentQuizIndex === 0) ? "0.5" : "1";
+            btnNextQuiz.style.opacity = (currentQuizIndex === QUIZ_LIST.length - 1) ? "0.5" : "1";
+        }
+
+        function checkQuizAnswer() {
+            if (!selectedOption) return;
+
+            const q = QUIZ_LIST[currentQuizIndex];
+            const isCorrect = (selectedOption === q.correctAnswer);
+
+            quizFeedback.classList.remove('hidden', 'bg-green-50', 'border-green-300', 'bg-red-50', 'border-red-300');
+
+            if (isCorrect) {
+                quizFeedback.classList.add('bg-green-50', 'border-green-400');
+                quizFeedbackIcon.className = "fa-solid fa-circle-check text-green-600 text-lg";
+                quizFeedbackResult.className = "text-green-800";
+                quizFeedbackResult.innerText = "正解です！おめでとうございます🎉";
+            } else {
+                quizFeedback.classList.add('bg-red-50', 'border-red-400');
+                quizFeedbackIcon.className = "fa-solid fa-circle-xmark text-red-600 text-lg";
+                quizFeedbackResult.className = "text-red-800";
+                quizFeedbackResult.innerText = `不正解です… (正解: ${q.correctAnswer})`;
+            }
+
+            quizExplanation.innerText = q.explanation;
+        }
+
+        function loadQuizToSimulator() {
+            const q = QUIZ_LIST[currentQuizIndex];
+            memory = { ...q.memory };
+            presetSelect.value = "custom";
+            resetSimulation();
+            quizModal.classList.add('hidden');
+        }
+
+        // イベントリスナー設定
+        btnStep.addEventListener('click', () => {
+            stopAuto();
+            stepSimulation();
+        });
+
+        btnAuto.addEventListener('click', toggleAutoRun);
+        btnReset.addEventListener('click', resetSimulation);
+        presetSelect.addEventListener('change', resetSimulation);
+
+        // クイズモーダル イベントリスナー
+        btnOpenQuiz.addEventListener('click', () => {
+            generateQuizQuestions(); // 毎回新しい問題を動的生成
+            renderQuiz(0);
+            quizModal.classList.remove('hidden');
+        });
+
+        btnRegenerateQuiz.addEventListener('click', () => {
+            generateQuizQuestions(); // 問題の再生成
+            renderQuiz(currentQuizIndex);
+        });
+
+        btnCloseQuiz.addEventListener('click', () => {
+            quizModal.classList.add('hidden');
+        });
+
+        btnCheckAnswer.addEventListener('click', checkQuizAnswer);
+        btnLoadToSim.addEventListener('click', loadQuizToSimulator);
+
+        btnPrevQuiz.addEventListener('click', () => {
+            if (currentQuizIndex > 0) renderQuiz(currentQuizIndex - 1);
+        });
+
+        btnNextQuiz.addEventListener('click', () => {
+            if (currentQuizIndex < QUIZ_LIST.length - 1) renderQuiz(currentQuizIndex + 1);
+        });
+
+        document.getElementById('btnEditMemory').addEventListener('click', () => {
+            const addr = prompt("編集したい主記憶装置の番地(0〜15)を入力してください:", "10");
+            if (addr !== null && !isNaN(addr)) {
+                editMemoryAddress(parseInt(addr));
+            }
+        });
+
+        window.addEventListener('resize', updateBusLines);
+
+        window.onload = () => {
+            resetSimulation();
+            setTimeout(updateBusLines, 200);
+        };
+
+    </script>
+</body>
+</html>
