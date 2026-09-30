@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>補数を用いた2進数の引き算 | 情報科演習問題</title>
+    <link rel="stylesheet" type="text/css" href="./common.css">
+    <script src="./common.js"></script>
+</head>
+<body>
+    <header class="title">
+        <h1><a href="./">情報演習</a>10進数から2進数への変換</h1>
+    </header>
+    <main>
+        <section class="PEE">
+            <h2>確認事項</h2>
+            <p>補数とは、「ある数に足すと特定のリセット単位（けた上がり）になる数」のことです。<br>
+                2進数における「2の補数」は、正の数に対する<B>負の数（マイナスの値）</B>を表現するために使われます。<br>
+                つまり、$A - B$ という引き算を $A + (-B)$ という足し算に置き換えることができます。
+            </p>
+            <hr>
+            <p>例）2進数 0011（十進数の 3）の2の補数（1101）を求める手順</p>
+            <p>$$
+            \begin{eqnarray*}
+             0011 & \\
+             & \text{ ↓ 各ビットを反転 } \\
+             1100 & \\
+             & \text{ ↓ １を足して完成 } \\
+             1101 \\
+            \end{eqnarray*}
+            $$
+            </p>
+            <hr>
+            <p>例）補数を使った $0101 - 0011$ の手順</p>
+            <p>ステップ１：$0011$の補数を求める
+            $$0101 \longrightarrow 1101$$
+            </p>
+            <p>ステップ２：引かれる数 $0101$ に 作成した補数 $1101$ を足す
+            $$
+            \begin{eqnarray*}
+               0101 & \\
+             + 1101 & \\
+             \hline
+              \textcolor{red}{1}0010 & \\
+            \end{eqnarray*}
+            $$
+            </p>
+            <p>ステップ3：最上位ビットの「けた上がり（溢れた1）」を無視する
+                $$\textcolor{red}{1}0010 \longrightarrow 0010$$
+            </p>
+        </section>
+    </main>
+</body>
+<script>
+    //createExercises(2);
+    
+    function createQuestion1(){
+        let n = Math.floor(Math.random() * 2048).toString(2);
+        let answer = n
+        let questionEle = document.createElement("p");
+        questionEle.innerText = "2進数の $ " + n + " $ " + " の補数を求めよ";
+        let tmp ="";
+        while (n>0){
+            tmp += (n +`& \\div 2 & = & ` + (n/2|0) + ` & \\text{ あまり } ` + n%2 + ` \\\\[0.2 em]
+            `);
+            n=n/2|0;
+        }
+        let explanationEle = document.createElement("p");
+        explanationEle.innerText = `模範解答　　：　$` + answer + `$ \n\n解説
+        $$
+        \\begin{eqnarray*}
+        ` + tmp + `
+        &&&&&\\text{商が0になったため計算終了}\\\\
+        \\end{eqnarray*}
+        $$
+        $$
+        %\\begin{eqnarray*}
+        \\text{あまり部分を下から上に並べると、} ` + answer + `
+        %\\end{eqnarray*}
+        $$`;
+        createQuestion(answer,questionEle,explanationEle,1);
+    }
+</script>
+</html>
