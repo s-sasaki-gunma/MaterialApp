@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情報I パリティビット＆プログラミング完全攻略</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Custom Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        /* Custom scrollbar for white theme */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen selection:bg-blue-500 selection:text-white">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const QUESTIONS = [
+            {
+                id: 1,
+                title: "問1：TCP/IPの階層モデルと機能",
+                q: "図1のA〜Cに当てはまる TCP/IP の各層の機能として最も適当な組み合わせを選べ。\n• あ: データを通信媒体に適合した電気信号や光信号に変換して送受信を行う。\n• い: 通信されたデータを確実に効率よくやり取りするための処理を行う。\n• う: 送信先のコンピュータのIPアドレスをもとに、データの通信経路の選択などを行う。",
+                options: [
+                    "① A-あ, B-う, C-い",
+                    "② A-い, B-う, C-あ",
+                    "③ A-い, B-あ, C-う"
+                ],
+                correct: 1, // index 1 = ②
+                explain: "3層トランスポート層(A)はデータ転送の信頼性確保(い)、2層インターネット層(B)はIPアドレスに基づく経路選択(う)、1層ネットワークインタフェース層(C)は電気・光信号変換(あ)を担います。"
+            },
+            {
+                id: 2,
+                title: "問2：ASCIIコードとビット数",
+                q: "「jyazu」という文字列（16進数で 6A 79 61 7A 75 の10桁）を2進数に変換したときの総ビット数は（ イ ）桁（ビット）である。",
+                type: "input",
+                correct: "40",
+                explain: "16進数の1桁は2進数の4桁に相当します。16進数10桁を2進数に変換すると 10桁 × 4 = 40桁（ビット）となります。"
+            },
+            {
+                id: 3,
+                title: "問3：ランレングス圧縮の圧縮率",
+                q: "図2の16×16ビット(256ビット)データをルールに従い行ごとに圧縮する。圧縮率「圧縮後データ量 ÷ 256 × 100」として最も近いものを選べ。\n※ルール：先頭1bit(0か1か) + 各連続個数を表す4bit",
+                options: [
+                    "⓪ 75.0%",
+                    "① 81.3%",
+                    "② 87.5%",
+                    "③ 93.8%"
+                ],
+                correct: 1, // ① 81.3%
+                explain: "図2の1行目（16ビット）は「0が3個, 1が8個, 0が5個」であり、先頭1bit + 4bit×3 = 13ビットに圧縮できます。1行目の圧縮率は 13 ÷ 16 × 100 = 81.25% ≒ 81.3% です。他の行も同じ構成のため全体でも 81.3% となります。"
+            },
+            {
+                id: 4,
+                title: "問4：1次元偶数パリティビットの付加",
+                q: "7ビットのデータ「0011001」に対して、偶数パリティによりパリティビットを最後に付加した送信データ（8ビット）を選べ。",
+                options: [
+                    "① 10011001",
+                    "② 00110010",
+                    "③ 00110011"
+                ],
+                correct: 2,
+                explain: "「0011001」には1が3個（奇数個）含まれます。全体で1の個数を偶数個にするため、パリティビットには「1」を付加します。よって「00110011」となります。"
+            },
+            {
+                id: 5,
+                title: "問5：2ビット誤りとパリティチェック",
+                q: "データ通信中に2ビットの誤りが発生した場合のパリティチェックの説明として正しいものを選べ。",
+                options: [
+                    "⓪ 誤りが発生したビットの位置によっては、誤りを検出できる",
+                    "① 誤りが二つあることを検出できる",
+                    "② 誤りが発生した位置に関係なく、誤りが二つあることを検出できる",
+                    "③ 誤りが発生したビットの位置に関係なく、誤りを検出することはできない"
+                ],
+                correct: 3,
+                explain: "2ビットの誤りが発生してそれぞれ反転しても、データ全体の「1」の個数の偶数・奇数は変化しないため、誤りを検出することはできません。"
+            },
+            {
+                id: 6,
+                title: "問6：プログラムの空欄[カ]（1データ生成）",
+                q: "図3のプログラムで、乱数が0.5未満（50%の確率）のときに配列 Data[i] に1を代入する処理[カ]として適切なものを選べ。",
+                options: [
+                    "⓪ Data[i] = 0",
+                    "① Data[i] = 1",
+                    "② Data[i + 1] = 0",
+                    "③ Data[i + 1] = 1"
+                ],
+                correct: 1,
+                explain: "配列 Data の各要素は最初 0 に初期化されているため、50%の確率で 1 を代入します。よって `Data[i] = 1` が正解です。"
+            },
+            {
+                id: 7,
+                title: "問7：プログラムの空欄[キ]（パリティビット計算）",
+                q: "図3の(07)行目において、1の個数 kosu から偶数パリティビットを計算して Data[7] に代入する式[キ]を選べ。",
+                options: [
+                    "⓪ kosu / 2",
+                    "① kosu / 2 + 1",
+                    "② kosu % 2",
+                    "③ kosu % 2 + 1"
+                ],
+                correct: 2,
+                explain: "配列内の「1」の個数 kosu が偶数なら 0、奇数なら 1 を付加すれば全体で偶数個になります。あまりを求める `kosu % 2` でパリティビットが得られます。"
+            },
+            {
+                id: 8,
+                title: "問8：プログラムの空欄[ク]（ノイズ対象要素）",
+                q: "図4のプログラムで、乱数 noizu (0〜8) の位置の要素を反転させる際、[ク] に入る式を選べ。",
+                options: [
+                    "⓪ Data[noizu - 1]",
+                    "① Data[noizu]",
+                    "② Data[noizu + 1]",
+                    "③ Data[noizu + 2]"
+                ],
+                correct: 1,
+                explain: "発生させた乱数 noizu がそのまま配列 Data の添字を表しているため、`Data[noizu]` が正解です。"
+            },
+            {
+                id: 9,
+                title: "問9：ノイズ発生確率の計算",
+                q: "図4で `noizu = 範囲乱数(0,8)` (0〜8の9通りの整数) が発生し、`noizu < 8` のときにノイズが発生する。ノイズが含まれる確率として最も近いものを選べ。",
+                options: [
+                    "⓪ 85.7%",
+                    "① 87.5%",
+                    "② 88.9%",
+                    "③ 90.0%"
+                ],
+                correct: 2,
+                explain: "範囲乱数(0,8)で生成される整数は 0〜8 の全9通り。noizu < 8 となるのは 0〜7 の8通りなので、確率は 8/9 ≒ 88.9% となります。"
+            },
+            {
+                id: 10,
+                title: "問10：プログラムの空欄[コ]（1のカウント）",
+                q: "図5の(04)行目で、配列の要素の1の個数をカウントする式 `kosu = [ コ ]` に入るものを選べ。",
+                options: [
+                    "⓪ kosu",
+                    "① kosu + 1",
+                    "② kosu + Data[i]",
+                    "③ kosu + Data[i + 1]"
+                ],
+                correct: 2,
+                explain: "各桁の数値（0または1）を順次加算していくことでデータ中の「1」の個数を数えられるため、`kosu + Data[i]` が正解です。"
+            },
+            {
+                id: 11,
+                title: "問11：プログラムの空欄[サ]（誤り判定条件）",
+                q: "図5の(05)行目で「データに誤りがあります」と判定するための条件式[サ]を選べ（偶数パリティ）。",
+                options: [
+                    "⓪ kosu / 2 == 0",
+                    "① kosu / 2 == 1",
+                    "② kosu % 2 == 0",
+                    "③ kosu % 2 == 1"
+                ],
+                correct: 3,
+                explain: "偶数パリティでは「1」の個数が偶数なら「誤りなし」、奇数なら「誤りあり」です。奇数判定を表す `kosu % 2 == 1` が条件式となります。"
+            },
+            {
+                id: 12,
+                title: "問12：2次元パリティの訂正能力",
+                q: "2次元パリティ（水平垂直パリティ）を用いることで、何ビットまでの誤りを「検出・訂正」できるようになるか数値で答えよ。",
+                type: "input",
+                correct: "1",
+                explain: "2次元パリティでは水平方向と垂直方向の両方からパリティチェックを行うため、1ビットの誤りであれば検出および自動訂正が可能です。"
+            },
+            {
+                id: 13,
+                title: "問13：誤り位置の特定（図7）",
+                q: "図7のデータを受信した場合、何行目・何列目のビットが誤りであるか答えよ。（例：2行4列目なら ス=2, セ=4）",
+                type: "multi_input",
+                corrects: ["4", "3"],
+                explain: "水平・垂直それぞれの「1」の個数を数えると、4行目が3個（奇数）、3列目が1個（奇数）でパリティが崩れているため、「4行目3列目」のビットに誤りがあります。"
+            },
+            {
+                id: 14,
+                title: "問14：2次元配列の添字",
+                q: "0から始まる添字の2次元配列 Data[i, j] で、4行5列目の要素を表すインデックス [ソ, タ] の数値を答えよ。",
+                type: "multi_input",
+                corrects: ["3", "4"],
+                explain: "配列の添字が0から始まるため、4行目はインデックス `3`、5列目はインデックス `4` となり、`Data[3, 4]` と表します。"
+            },
+            {
+                id: 15,
+                title: "問15：プログラムの空欄[チ, ツ]（パリティ代入）",
+                q: "図8の(12)行目 `[チ] = kosu_yoko % 2` と (13)行目 `[ツ] = kosu_tate % 2` に入る配列の要素を選べ。",
+                options: [
+                    "⓪ チ: Data[i, 4], ツ: Data[4, i]",
+                    "① チ: Data[j, 4], ツ: Data[4, j]",
+                    "② チ: Data[4, i], ツ: Data[i, 4]",
+                    "③ チ: Data[4, j], ツ: Data[j, 4]"
+                ],
+                correct: 0,
+                explain: "i行目の水平パリティを格納する末尾要素は `Data[i, 4]`（チ）、i列目の垂直パリティを格納する末尾要素は `Data[4, i]`（ツ）となります。"
+            },
+            {
+                id: 16,
+                title: "問16：プログラムの空欄[テ]（データ領域判定）",
+                q: "図9の(17)行目でノイズ発生位置がパリティビット領域（4行目・4列目）を除いた本体データ領域内にあるかを判定する論理演算子[テ]を選べ。",
+                options: [
+                    "⓪ and",
+                    "① or",
+                    "② not"
+                ],
+                correct: 0,
+                explain: "noizu_tate < 4 と noizu_yoko < 4 の両方の条件を同時に満たす必要があるため、論理積 `and` を使用します。"
+            },
+            {
+                id: 17,
+                title: "問17：プログラムの空欄[ト, ナ]（ビット反転）",
+                q: "図9で、対象要素が0の場合は[ト]を代入し、そうでなければ[ナ]を代入してビットを反転させる組み合わせを選べ。",
+                options: [
+                    "⓪ ト: 0, ナ: 1",
+                    "① ト: 1, ナ: 0",
+                    "② ト: 1, ナ: 1",
+                    "③ ト: 0, ナ: 0"
+                ],
+                correct: 1,
+                explain: "対象のビットが 0 なら 1 に反転(ト=1)、1 なら 0 に反転(ナ=0)させます。"
+            },
+            {
+                id: 18,
+                title: "問18：2次元データでのノイズ発生確率",
+                q: "図9で `noizu_tate` と `noizu_yoko` に 0〜4 (各5通り) の乱数が代入される。パリティを除いた本体データ(4×4)にノイズが含まれる確率[ニ]を選べ。",
+                options: [
+                    "⓪ 36.0%",
+                    "① 43.7%",
+                    "② 56.3%",
+                    "③ 64.0%"
+                ],
+                correct: 3,
+                explain: "範囲乱数(0,4)が0〜3になる確率は 4/5 = 0.8。両方が0〜3となる確率は 4/5 × 4/5 = 16/25 = 0.64 (64.0%) です。"
+            },
+            {
+                id: 19,
+                title: "問19：プログラムの空欄[ヌ]（誤り位置の記録）",
+                q: "図10の(11)(13)行目で、パリティエラーが発生した行・列番号(1始まりの表示用)を `noizu_tate`, `noizu_yoko` に記録する式[ヌ]を選べ。",
+                options: [
+                    "⓪ i",
+                    "① i + 1",
+                    "② j",
+                    "③ j + 1"
+                ],
+                correct: 1,
+                explain: "配列の添字 i は0から始まりますが、表示上の行番号・列番号は1から始まるため `i + 1` を代入します。"
+            },
+            {
+                id: 20,
+                title: "問20：プログラムの空欄[ネ]（正常終了判定）",
+                q: "図10の(14)行目 `もし noizu_tate [ネ] 0 ならば: 表示(\"データに誤りはありません\")` に入る比較演算子を選べ。",
+                options: [
+                    "⓪ ==",
+                    "① !=",
+                    "② <",
+                    "③ >"
+                ],
+                correct: 0,
+                explain: "誤りが検知されず初期値 0 のままである場合（`noizu_tate == 0`）に「データに誤りはありません」と判定します。"
+            }
+        ];
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('sim'); // デフォルトを'sim'（実験シミュレータ）に変更
+
+            return (
+                <div className="min-h-screen flex flex-col bg-slate-100 text-slate-800">
+                    {/* Header - White Background with Vivid Primary Accent */}
+                    <header className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 flex flex-wrap justify-between items-center shadow-sm">
+                        <div className="flex items-center space-x-3">
+                            <div className="bg-blue-600 text-white font-bold px-3 py-2 rounded-xl text-lg tracking-wider shadow-md shadow-blue-500/20">
+                                0101
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                                    <span>情報I パリティビット＆プログラミング攻略</span>
+                                    <span className="bg-blue-100 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-bold">高校生向け</span>
+                                </h1>
+                                <p className="text-xs text-slate-500 mt-0.5">誤り検出・訂正 & 共通テスト融合問題 完全攻略アプリ</p>
+                            </div>
+                        </div>
+
+                        {/* Navigation Tabs */}
+                        <div className="flex space-x-2 mt-3 sm:mt-0 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                            <button
+                                onClick={() => setActiveTab('code')}
+                                className={`px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition flex items-center space-x-1.5 ${activeTab === 'code' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'}`}
+                            >
+                                <span>💻</span>
+                                <span>疑似コード ステップ実行</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('sim')}
+                                className={`px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition flex items-center space-x-1.5 ${activeTab === 'sim' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'}`}
+                            >
+                                <span>🎮</span>
+                                <span>実験シミュレータ</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('quiz')}
+                                className={`px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition flex items-center space-x-1.5 ${activeTab === 'quiz' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'}`}
+                            >
+                                <span>📝</span>
+                                <span>全20問 演習 & 解説</span>
+                            </button>
+                        </div>
+                    </header>
+
+                    {/* Main Content Area */}
+                    <main className="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto">
+                        {activeTab === 'code' && <CodeView />}
+                        {activeTab === 'sim' && <SimulatorView />}
+                        {activeTab === 'quiz' && <QuizView />}
+                    </main>
+
+                    {/* Footer */}
+                    <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 font-medium">
+                        高等学校情報科「情報I」学習サポート — パリティビット・データ圧縮・プログラミング融合シミュレータ
+                    </footer>
+                </div>
+            );
+        }
+
+        function CodeView() {
+            const [selectedFig, setSelectedFig] = useState('fig3');
+            const [stepIndex, setStepIndex] = useState(0);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [speedMs, setSpeedMs] = useState(800); // 200ms to 2000ms
+            const timerRef = useRef(null);
+
+            // Generator for simulated step traces for each figure
+            const [executionSteps, setExecutionSteps] = useState([]);
+
+            // Code listings definition
+            const CODE_DOCS = {
+                fig3: {
+                    title: "図3：7ビットデータへの偶数パリティ付与プログラム",
+                    questionRef: "問6（空欄カ）, 問7（空欄キ）",
+                    codeLines: [
+                        "(01) Data = [0, 0, 0, 0, 0, 0, 0, 0]",
+                        "(02) kosu = 0",
+                        "(03) i を 0 から 6 まで 1 ずつ増やしながら繰り返す:",
+                        "(04)     もし 乱数() < 0.5 ならば:",
+                        "(05)         Data[i] = 1   # 空欄 [カ]",
+                        "(06)         kosu = kosu + 1",
+                        "(07) Data[7] = kosu % 2     # 空欄 [キ]"
+                    ],
+                    generateTrace: () => {
+                        const steps = [];
+                        let Data = [0, 0, 0, 0, 0, 0, 0, 0];
+                        let kosu = 0;
+
+                        steps.push({ line: 0, vars: { Data: [...Data], kosu, i: '-' }, msg: "(01) 配列 Data を長さ8で初期化" });
+                        steps.push({ line: 1, vars: { Data: [...Data], kosu, i: '-' }, msg: "(02) カウンタ kosu を 0 にリセット" });
+
+                        for (let i = 0; i <= 6; i++) {
+                            steps.push({ line: 2, vars: { Data: [...Data], kosu, i }, msg: `(03) ループ開始: i = ${i}` });
+                            const randVal = Math.random();
+                            const cond = randVal < 0.5;
+                            steps.push({
+                                line: 3,
+                                vars: { Data: [...Data], kosu, i, rand: randVal.toFixed(2) },
+                                msg: `(04) 乱数(${randVal.toFixed(2)}) < 0.5 は [${cond ? '真 (1を代入)' : '偽 (代入スキップ)'}]`
+                            });
+
+                            if (cond) {
+                                Data[i] = 1;
+                                steps.push({ line: 4, vars: { Data: [...Data], kosu, i }, msg: `(05) [カ] Data[${i}] に 1 を代入` });
+                                kosu += 1;
+                                steps.push({ line: 5, vars: { Data: [...Data], kosu, i }, msg: `(06) kosu を加算 → kosu = ${kosu}` });
+                            }
+                        }
+
+                        const parity = kosu % 2;
+                        Data[7] = parity;
+                        steps.push({
+                            line: 6,
+                            vars: { Data: [...Data], kosu, i: 6, parity },
+                            msg: `(07) [キ] Data[7] = kosu % 2 (${kosu} % 2 = ${parity}) を格納！`
+                        });
+
+                        return steps;
+                    }
+                },
+                fig4: {
+                    title: "図4：送信データへの疑似ノイズ発生プログラム",
+                    questionRef: "問8（空欄ク）, 問9（空欄ケ）",
+                    codeLines: [
+                        "(08) noizu = 範囲乱数(0, 8)",
+                        "(09) もし noizu < 8 ならば:",
+                        "(10)     もし Data[noizu] == 0 ならば:   # 空欄 [ク]",
+                        "(11)         Data[noizu] = 1",
+                        "(12)     そうでなければ:",
+                        "(13)         Data[noizu] = 0"
+                    ],
+                    generateTrace: () => {
+                        const steps = [];
+                        let Data = [0, 1, 1, 0, 1, 0, 0, 1]; // sample initial
+                        const noizu = Math.floor(Math.random() * 9); // 0 to 8
+
+                        steps.push({ line: 0, vars: { Data: [...Data], noizu }, msg: `(08) 範囲乱数(0,8) を発生 → noizu = ${noizu}` });
+                        const isNoiseIn = noizu < 8;
+                        steps.push({ line: 1, vars: { Data: [...Data], noizu }, msg: `(09) noizu < 8 (${noizu} < 8) 判定 → [${isNoiseIn ? '真：ノイズが発生！' : '偽：ノイズなし(正常送信)'}]` });
+
+                        if (isNoiseIn) {
+                            const currentBit = Data[noizu];
+                            steps.push({ line: 2, vars: { Data: [...Data], noizu, targetBit: currentBit }, msg: `(10) [ク] Data[${noizu}] (${currentBit}) の値を参照` });
+                            if (currentBit === 0) {
+                                Data[noizu] = 1;
+                                steps.push({ line: 3, vars: { Data: [...Data], noizu }, msg: `(11) 0 だったため 1 に反転！` });
+                            } else {
+                                steps.push({ line: 4, vars: { Data: [...Data], noizu }, msg: `(12) 1 だったため そうでなければ節へ` });
+                                Data[noizu] = 0;
+                                steps.push({ line: 5, vars: { Data: [...Data], noizu }, msg: `(13) 1 だったため 0 に反転！` });
+                            }
+                        }
+                        return steps;
+                    }
+                },
+                fig5: {
+                    title: "図5：受信データのパリティチェックプログラム",
+                    questionRef: "問10（空欄コ）, 問11（空欄サ）",
+                    codeLines: [
+                        "(01) Data = 【受信データ (8個の要素)】",
+                        "(02) kosu = 0",
+                        "(03) i を 0 から 7 まで 1 ずつ増やしながら繰り返す:",
+                        "(04)     kosu = kosu + Data[i]    # 空欄 [コ]",
+                        "(05) もし kosu % 2 == 1 ならば:      # 空欄 [サ]",
+                        "(06)     表示する(\"データに誤りがあります\")",
+                        "(07) そうでなければ:",
+                        "(08)     表示する(\"データに誤りはありません\")"
+                    ],
+                    generateTrace: () => {
+                        const steps = [];
+                        // Randomly simulate error or normal receive
+                        const hasError = Math.random() < 0.5;
+                        const Data = hasError ? [0, 1, 1, 0, 1, 0, 0, 0] : [0, 1, 1, 0, 1, 0, 0, 1];
+                        let kosu = 0;
+
+                        steps.push({ line: 0, vars: { Data: [...Data], kosu, i: '-' }, msg: `(01) 受信データ Data をセット: [${Data.join(', ')}]` });
+                        steps.push({ line: 1, vars: { Data: [...Data], kosu, i: '-' }, msg: "(02) カウンタ kosu を 0 で初期化" });
+
+                        for (let i = 0; i <= 7; i++) {
+                            steps.push({ line: 2, vars: { Data: [...Data], kosu, i }, msg: `(03) ループ i = ${i}` });
+                            kosu += Data[i];
+                            steps.push({ line: 3, vars: { Data: [...Data], kosu, i }, msg: `(04) [コ] kosu = kosu + Data[${i}] (${Data[i]}) → kosu = ${kosu}` });
+                        }
+
+                        const isOdd = kosu % 2 === 1;
+                        steps.push({ line: 4, vars: { Data: [...Data], kosu, isOdd }, msg: `(05) [サ] kosu % 2 == 1 (${kosu} % 2 == ${kosu % 2}) 判定 → [${isOdd ? '真 (エラー検出)' : '偽 (正常判定)'}]` });
+
+                        if (isOdd) {
+                            steps.push({ line: 5, vars: { Data: [...Data], kosu, alert: 'データに誤りがあります' }, msg: '(06) 表示: 「データに誤りがあります」' });
+                        } else {
+                            steps.push({ line: 6, vars: { Data: [...Data], kosu }, msg: '(07) そうでなければ節へ' });
+                            steps.push({ line: 7, vars: { Data: [...Data], kosu, alert: 'データに誤りはありません' }, msg: '(08) 表示: 「データに誤りはありません」' });
+                        }
+                        return steps;
+                    }
+                },
+                fig8: {
+                    title: "図8：2次元パリティ(4×4データ)付与プログラム",
+                    questionRef: "問14（添字）, 問15（空欄チ, ツ）",
+                    codeLines: [
+                        "(01) 【2次元配列 Dataの5×5すべてに0を代入】",
+                        "(02) i を 0 から 3 まで繰り返す:",
+                        "(03)     j を 0 から 3 まで繰り返す:",
+                        "(04)         もし 乱数() < 0.5 ならば:",
+                        "(05)             Data[i, j] = 1",
+                        "(06) i を 0 から 3 まで繰り返す:",
+                        "(07)     kosu_yoko = 0, kosu_tate = 0",
+                        "(09)     j を 0 から 3 まで繰り返す:",
+                        "(10)         kosu_yoko = kosu_yoko + Data[i, j]",
+                        "(11)         kosu_tate = kosu_tate + Data[j, i]",
+                        "(12)     Data[i, 4] = kosu_yoko % 2   # 空欄 [チ]",
+                        "(13)     Data[4, i] = kosu_tate % 2   # 空欄 [ツ]"
+                    ],
+                    generateTrace: () => {
+                        const steps = [];
+                        let Data2D = Array.from({ length: 5 }, () => Array(5).fill(0));
+
+                        steps.push({ line: 0, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)) }, msg: "(01) 5x5の2次元配列 Data を0クリア" });
+
+                        // Fill sample random data for 4x4
+                        for (let r = 0; r < 4; r++) {
+                            for (let c = 0; c < 4; c++) {
+                                if (Math.random() < 0.5) Data2D[r][c] = 1;
+                            }
+                        }
+                        steps.push({ line: 4, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)) }, msg: "(02〜05) 4x4領域にランダムビット(0/1)を生成しました" });
+
+                        for (let i = 0; i < 4; i++) {
+                            let kosu_yoko = 0;
+                            let kosu_tate = 0;
+                            steps.push({ line: 5, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)), i }, msg: `(06) 外側ループ: 行/列インデックス i = ${i}` });
+                            steps.push({ line: 6, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)), i, kosu_yoko, kosu_tate }, msg: `(07) カウンタ初期化: kosu_yoko=0, kosu_tate=0` });
+
+                            for (let j = 0; j < 4; j++) {
+                                kosu_yoko += Data2D[i][j];
+                                kosu_tate += Data2D[j][i];
+                            }
+                            steps.push({ line: 9, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)), i, kosu_yoko, kosu_tate }, msg: `(09〜11) 内側ループ完了: ${i+1}行目合計=${kosu_yoko}, ${i+1}列目合計=${kosu_tate}` });
+
+                            Data2D[i][4] = kosu_yoko % 2;
+                            steps.push({ line: 10, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)), i, kosu_yoko, kosu_tate }, msg: `(12) [チ] 水平パリティ格納: Data[${i}, 4] = ${kosu_yoko % 2}` });
+
+                            Data2D[4][i] = kosu_tate % 2;
+                            steps.push({ line: 11, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)), i, kosu_yoko, kosu_tate }, msg: `(13) [ツ] 垂直パリティ格納: Data[4, ${i}] = ${kosu_tate % 2}` });
+                        }
+
+                        return steps;
+                    }
+                },
+                fig10: {
+                    title: "図10：2次元パリティによる誤り検知・特定プログラム",
+                    questionRef: "問19（空欄ヌ）, 問20（空欄ネ）",
+                    codeLines: [
+                        "(01) Data = 【受信データ (5×5の2次元配列)】",
+                        "(02) noizu_tate = 0, noizu_yoko = 0",
+                        "(04) i を 0 から 4 まで繰り返す:",
+                        "(05)     kosu_yoko = 0, kosu_tate = 0",
+                        "(07)     j を 0 から 4 まで繰り返す:",
+                        "(08)         kosu_yoko = kosu_yoko + Data[i, j]",
+                        "(09)         kosu_tate = kosu_tate + Data[j, i]",
+                        "(10)     もし kosu_yoko % 2 == 1 ならば:",
+                        "(11)         noizu_tate = i + 1      # 空欄 [ヌ]",
+                        "(12)     もし kosu_tate % 2 == 1 ならば:",
+                        "(13)         noizu_yoko = j + 1      # 空欄 [ヌ]",
+                        "(14) もし noizu_tate == 0 ならば:     # 空欄 [ネ]",
+                        "(15)     表示(\"データに誤りはありません\")",
+                        "(16) そうでなければ:",
+                        "(17)     表示(noizu_tate, \"行\", noizu_yoko, \"列目に誤りあり\")"
+                    ],
+                    generateTrace: () => {
+                        const steps = [];
+                        let Data2D = Array.from({ length: 5 }, () => Array(5).fill(0));
+                        // Fill valid 4x4 + parities
+                        for (let r = 0; r < 4; r++) {
+                            for (let c = 0; c < 4; c++) {
+                                Data2D[r][c] = (r + c) % 2;
+                            }
+                        }
+                        for (let r = 0; r < 4; r++) {
+                            Data2D[r][4] = Data2D[r].slice(0, 4).reduce((a, b) => a + b, 0) % 2;
+                        }
+                        for (let c = 0; c < 4; c++) {
+                            let sum = 0;
+                            for (let r = 0; r < 4; r++) sum += Data2D[r][c];
+                            Data2D[4][c] = sum % 2;
+                        }
+
+                        // Inject noise at 2nd row, 3rd column (index 1, 2)
+                        const errR = 1, errC = 2;
+                        Data2D[errR][errC] = Data2D[errR][errC] === 0 ? 1 : 0;
+
+                        let noizu_tate = 0, noizu_yoko = 0;
+
+                        steps.push({ line: 0, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)), noizu_tate, noizu_yoko }, msg: `(01) 受信データをセット (注意: ${errR+1}行${errC+1}列目にノイズが混入中)` });
+                        steps.push({ line: 1, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)), noizu_tate, noizu_yoko }, msg: `(02) エラー特定変数 noizu_tate=0, noizu_yoko=0 で初期化` });
+
+                        for (let i = 0; i < 5; i++) {
+                            let kosu_yoko = 0, kosu_tate = 0;
+                            steps.push({ line: 2, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)), i, noizu_tate, noizu_yoko }, msg: `(04) パリティチェックループ: i = ${i}` });
+                            for (let j = 0; j < 5; j++) {
+                                kosu_yoko += Data2D[i][j];
+                                kosu_tate += Data2D[j][i];
+                            }
+
+                            if (kosu_yoko % 2 === 1) {
+                                noizu_tate = i + 1;
+                                steps.push({ line: 8, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)), i, noizu_tate, noizu_yoko }, msg: `(10-11) [ヌ] 行パリティ異常発生！ noizu_tate = ${i + 1} を記録` });
+                            }
+                            if (kosu_tate % 2 === 1) {
+                                noizu_yoko = i + 1;
+                                steps.push({ line: 10, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)), i, noizu_tate, noizu_yoko }, msg: `(12-13) [ヌ] 列パリティ異常発生！ noizu_yoko = ${i + 1} を記録` });
+                            }
+                        }
+
+                        const noError = noizu_tate === 0;
+                        steps.push({ line: 11, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)), noizu_tate, noizu_yoko }, msg: `(14) [ネ] noizu_tate == 0 (${noizu_tate} == 0) 判定 → [${noError ? '真' : '偽 (エラー箇所を表示へ)'}]` });
+
+                        if (!noError) {
+                            steps.push({ line: 14, vars: { Data2D: JSON.parse(JSON.stringify(Data2D)), noizu_tate, noizu_yoko, alert: `${noizu_tate}行${noizu_yoko}列目に誤りあり` }, msg: `(17) 表示: ${noizu_tate}行 ${noizu_yoko}列目に誤りあり！` });
+                        }
+
+                        return steps;
+                    }
+                }
+            };
+
+            // Initialize or regenerate trace when selected code changes
+            const resetTrace = () => {
+                setIsPlaying(false);
+                if (timerRef.current) clearInterval(timerRef.current);
+                const doc = CODE_DOCS[selectedFig];
+                if (doc && doc.generateTrace) {
+                    const trace = doc.generateTrace();
+                    setExecutionSteps(trace);
+                    setStepIndex(0);
+                }
+            };
+
+            useEffect(() => {
+                resetTrace();
+            }, [selectedFig]);
+
+            // Handle timer playback
+            useEffect(() => {
+                if (isPlaying) {
+                    timerRef.current = setInterval(() => {
+                        setStepIndex(prev => {
+                            if (prev >= executionSteps.length - 1) {
+                                setIsPlaying(false);
+                                clearInterval(timerRef.current);
+                                return prev;
+                            }
+                            return prev + 1;
+                        });
+                    }, speedMs);
+                } else {
+                    if (timerRef.current) clearInterval(timerRef.current);
+                }
+                return () => {
+                    if (timerRef.current) clearInterval(timerRef.current);
+                };
+            }, [isPlaying, speedMs, executionSteps]);
+
+            const currentDoc = CODE_DOCS[selectedFig];
+            const currentStep = executionSteps[stepIndex] || { line: 0, vars: {}, msg: '準備完了' };
+
+            // Handlers for controls
+            const handlePlay = () => {
+                if (stepIndex >= executionSteps.length - 1) {
+                    setStepIndex(0);
+                }
+                setIsPlaying(true);
+            };
+
+            const handlePause = () => {
+                setIsPlaying(false);
+            };
+
+            const handleResume = () => {
+                if (stepIndex < executionSteps.length - 1) {
+                    setIsPlaying(true);
+                }
+            };
+
+            const handleReset = () => {
+                setIsPlaying(false);
+                setStepIndex(0);
+            };
+
+            const handleNextStep = () => {
+                setIsPlaying(false);
+                if (stepIndex < executionSteps.length - 1) {
+                    setStepIndex(prev => prev + 1);
+                }
+            };
+
+            return (
+                <div className="space-y-6 max-w-5xl mx-auto">
+                    {/* Top Select Tabs */}
+                    <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap gap-2 justify-center">
+                        {Object.keys(CODE_DOCS).map(key => (
+                            <button
+                                key={key}
+                                onClick={() => setSelectedFig(key)}
+                                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${selectedFig === key ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            >
+                                {key.toUpperCase()} プログラム
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Main Simulation Panel */}
+                    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+                        {/* Title & Info */}
+                        <div className="border-b border-slate-100 pb-4 flex flex-wrap justify-between items-center gap-2">
+                            <div>
+                                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
+                                    {currentDoc.questionRef}
+                                </span>
+                                <h2 className="text-lg font-extrabold text-slate-900 mt-2">{currentDoc.title}</h2>
+                            </div>
+                            <button
+                                onClick={resetTrace}
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition border border-slate-300 flex items-center gap-1"
+                            >
+                                🔄 ランダム値で再生成
+                            </button>
+                        </div>
+
+                        {/* Control Toolbar (4 Action Buttons + Speed Slider) */}
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                            {/* Buttons */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                {!isPlaying && stepIndex === 0 && (
+                                    <button
+                                        onClick={handlePlay}
+                                        className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center gap-1.5"
+                                    >
+                                        ▶️ 開始
+                                    </button>
+                                )}
+
+                                {isPlaying && (
+                                    <button
+                                        onClick={handlePause}
+                                        className="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center gap-1.5"
+                                    >
+                                        ⏸️ 一時停止
+                                    </button>
+                                )}
+
+                                {!isPlaying && stepIndex > 0 && stepIndex < executionSteps.length - 1 && (
+                                    <button
+                                        onClick={handleResume}
+                                        className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center gap-1.5"
+                                    >
+                                        ▶️ 再開
+                                    </button>
+                                )}
+
+                                <button
+                                    onClick={handleReset}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl shadow-sm transition flex items-center gap-1.5"
+                                >
+                                    ↩️ 最初から
+                                </button>
+
+                                <button
+                                    onClick={handleNextStep}
+                                    disabled={stepIndex >= executionSteps.length - 1 || isPlaying}
+                                    className="px-4 py-2 bg-slate-700 hover:bg-slate-800 disabled:opacity-40 text-white font-bold text-xs rounded-xl shadow-sm transition"
+                                >
+                                    ⏭️ 1ステップ進む
+                                </button>
+                            </div>
+
+                            {/* Speed Slider */}
+                            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded-xl border border-slate-200">
+                                <span className="text-xs font-bold text-slate-600">再生速度:</span>
+                                <input
+                                    type="range"
+                                    min="200"
+                                    max="2000"
+                                    step="100"
+                                    value={2200 - speedMs} // inverted for intuitive left=slow, right=fast
+                                    onChange={(e) => setSpeedMs(2200 - Number(e.target.value))}
+                                    className="w-28 accent-blue-600 cursor-pointer"
+                                />
+                                <span className="text-xs font-mono font-bold text-blue-600 w-12 text-right">
+                                    {(1000 / speedMs).toFixed(1)}x
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="space-y-1">
+                            <div className="flex justify-between text-xs text-slate-500 font-mono font-semibold">
+                                <span>実行ステップ: {stepIndex + 1} / {executionSteps.length}</span>
+                                <span>{Math.round(((stepIndex + 1) / executionSteps.length) * 100)}% 完了</span>
+                            </div>
+                            <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                                <div
+                                    className="bg-blue-600 h-full transition-all duration-300"
+                                    style={{ width: `${((stepIndex + 1) / executionSteps.length) * 100}%` }}
+                                ></div>
+                            </div>
+                        </div>
+
+                        {/* Code + Live Variable State Grid */}
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            {/* Code Line Display (Left 7 Columns) */}
+                            <div className="lg:col-span-7 bg-slate-900 rounded-2xl p-4 font-mono text-xs text-slate-200 shadow-inner overflow-x-auto">
+                                <div className="text-[10px] text-slate-400 font-sans border-b border-slate-800 pb-2 mb-3 flex justify-between">
+                                    <span>疑似コード エディタ</span>
+                                    <span className="text-blue-400 font-bold">● LIVE STEP HIGHLIGHT</span>
+                                </div>
+                                {currentDoc.codeLines.map((line, idx) => {
+                                    const isCurrentLine = currentStep.line === idx;
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className={`px-3 py-1.5 rounded-lg transition-all flex items-center space-x-3 my-1 ${isCurrentLine ? 'bg-blue-600 text-white font-bold shadow-md scale-[1.01]' : 'hover:bg-slate-800/80 text-slate-300'}`}
+                                        >
+                                            <span className={`w-6 text-right select-none text-[10px] ${isCurrentLine ? 'text-blue-200' : 'text-slate-600'}`}>
+                                                {idx + 1}
+                                            </span>
+                                            <span className="whitespace-pre">{line}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Variable State Monitor (Right 5 Columns) */}
+                            <div className="lg:col-span-5 space-y-4">
+                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2 flex items-center justify-between">
+                                        <span>🔍 リアルタイム変数モニター</span>
+                                        <span className="text-emerald-600 font-bold">更新中</span>
+                                    </h3>
+
+                                    {/* Explanation Log Box */}
+                                    <div className="bg-blue-50 border border-blue-200 p-3 rounded-xl text-xs text-blue-900 font-medium">
+                                        {currentStep.msg}
+                                    </div>
+
+                                    {/* Data Array 1D Visualizer */}
+                                    {currentStep.vars.Data && (
+                                        <div className="space-y-1">
+                                            <div className="text-[11px] font-bold text-slate-600">配列 Data (8要素):</div>
+                                            <div className="grid grid-cols-8 gap-1 font-mono text-center">
+                                                {currentStep.vars.Data.map((val, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`p-2 rounded-lg border text-sm font-bold transition-all ${idx === 7 ? 'bg-amber-100 border-amber-400 text-amber-800' : val === 1 ? 'bg-blue-600 border-blue-700 text-white' : 'bg-white border-slate-300 text-slate-500'}`}
+                                                    >
+                                                        <div>{val}</div>
+                                                        <div className="text-[8px] font-sans text-slate-400 mt-0.5">[{idx}]</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Data Array 2D Visualizer */}
+                                    {currentStep.vars.Data2D && (
+                                        <div className="space-y-1">
+                                            <div className="text-[11px] font-bold text-slate-600">2次元配列 Data (5×5):</div>
+                                            <div className="bg-white p-2 rounded-xl border border-slate-200 inline-block">
+                                                {currentStep.vars.Data2D.map((row, rIdx) => (
+                                                    <div key={rIdx} className="flex gap-1 mb-1">
+                                                        {row.map((val, cIdx) => (
+                                                            <div
+                                                                key={cIdx}
+                                                                className={`w-7 h-7 rounded text-xs font-mono font-bold flex items-center justify-center border ${rIdx === 4 || cIdx === 4 ? 'bg-amber-100 border-amber-300 text-amber-800' : val === 1 ? 'bg-blue-600 border-blue-700 text-white' : 'bg-slate-100 border-slate-200 text-slate-600'}`}
+                                                            >
+                                                                {val}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Other Scalar Variables */}
+                                    <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                                        {Object.entries(currentStep.vars).map(([k, v]) => {
+                                            if (k === 'Data' || k === 'Data2D') return null;
+                                            return (
+                                                <div key={k} className="bg-white p-2.5 rounded-xl border border-slate-200 flex justify-between items-center">
+                                                    <span className="text-slate-500 font-sans">{k}:</span>
+                                                    <span className="font-bold text-blue-600 text-sm">{String(v)}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function SimulatorView() {
+            const [mode, setMode] = useState('1d'); // '1d', '2d', 'ascii'
+
+            return (
+                <div className="space-y-6 max-w-5xl mx-auto">
+                    {/* Mode Selector - White Theme */}
+                    <div className="flex justify-center space-x-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm max-w-xl mx-auto">
+                        <button
+                            onClick={() => setMode('1d')}
+                            className={`flex-1 py-2 rounded-xl font-bold text-xs sm:text-sm transition ${mode === '1d' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                        >
+                            1次元パリティ (問4〜11)
+                        </button>
+                        <button
+                            onClick={() => setMode('2d')}
+                            className={`flex-1 py-2 rounded-xl font-bold text-xs sm:text-sm transition ${mode === '2d' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                        >
+                            2次元水平垂直パリティ (問12〜20)
+                        </button>
+                        <button
+                            onClick={() => setMode('ascii')}
+                            className={`flex-1 py-2 rounded-xl font-bold text-xs sm:text-sm transition ${mode === 'ascii' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                        >
+                            ASCII & 圧縮 (問2,3)
+                        </button>
+                    </div>
+
+                    {mode === '1d' && <OneDParitySim />}
+                    {mode === '2d' && <TwoDParitySim />}
+                    {mode === 'ascii' && <AsciiCompressSim />}
+                </div>
+            );
+        }
+
+        function OneDParitySim() {
+            const [dataBits, setDataBits] = useState([0, 0, 1, 1, 0, 0, 1]); // 7 bits
+            const [parityType, setParityType] = useState('even'); // 'even' or 'odd'
+
+            const onesCount = dataBits.reduce((a, b) => a + b, 0);
+            const parityBit = parityType === 'even' ? (onesCount % 2) : ((onesCount + 1) % 2);
+            const fullArray = [...dataBits, parityBit];
+            const currentOnes = fullArray.reduce((a, b) => a + b, 0);
+            const isErrorDetected = parityType === 'even' ? (currentOnes % 2 !== 0) : (currentOnes % 2 === 0);
+
+            const toggleBit = (index) => {
+                const next = [...dataBits];
+                next[index] = next[index] === 0 ? 1 : 0;
+                setDataBits(next);
+            };
+
+            const generateRandom = () => {
+                const randomBits = Array.from({ length: 7 }, () => Math.random() < 0.5 ? 0 : 1);
+                setDataBits(randomBits);
+            };
+
+            const injectNoise = (count) => {
+                const next = [...dataBits];
+                const indices = [];
+                while (indices.length < count) {
+                    const idx = Math.floor(Math.random() * 7);
+                    if (!indices.includes(idx)) indices.push(idx);
+                }
+                indices.forEach(i => next[i] = next[i] === 0 ? 1 : 0);
+                setDataBits(next);
+            };
+
+            return (
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+                    <div className="border-b border-slate-100 pb-4 flex justify-between items-center">
+                        <div>
+                            <h2 className="text-lg font-bold text-slate-900">1次元パリティビット・実験室</h2>
+                            <p className="text-xs text-slate-500">データビットをタップして変更したり、ノイズボタンでエラー検出動作を確認できます。</p>
+                        </div>
+                        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+                            <button
+                                onClick={() => setParityType('even')}
+                                className={`px-3 py-1.5 rounded-lg transition ${parityType === 'even' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600'}`}
+                            >
+                                偶数パリティ
+                            </button>
+                            <button
+                                onClick={() => setParityType('odd')}
+                                className={`px-3 py-1.5 rounded-lg transition ${parityType === 'odd' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600'}`}
+                            >
+                                奇数パリティ
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Bit Display Panel */}
+                    <div className="space-y-3">
+                        <div className="text-xs font-bold text-slate-500 flex justify-between px-1">
+                            <span>7ビットデータ領域 (Data[0..6])</span>
+                            <span>パリティビット (Data[7])</span>
+                        </div>
+                        <div className="grid grid-cols-8 gap-2">
+                            {dataBits.map((bit, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => toggleBit(idx)}
+                                    className={`h-20 rounded-2xl font-mono text-2xl font-extrabold flex flex-col items-center justify-center border-2 transition-all transform hover:scale-105 active:scale-95 shadow-sm ${bit === 1 ? 'bg-blue-600 border-blue-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-700'}`}
+                                >
+                                    <span>{bit}</span>
+                                    <span className={`text-[10px] font-sans mt-1 ${bit === 1 ? 'text-blue-200' : 'text-slate-400'}`}>
+                                        Data[{idx}]
+                                    </span>
+                                </button>
+                            ))}
+                            {/* Parity Bit */}
+                            <div className="h-20 rounded-2xl font-mono text-2xl font-extrabold flex flex-col items-center justify-center border-2 bg-amber-100 border-amber-400 text-amber-900 shadow-sm">
+                                <span>{parityBit}</span>
+                                <span className="text-[10px] font-sans text-amber-700 mt-1">Data[7]</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="flex flex-wrap gap-3 pt-2">
+                        <button onClick={generateRandom} className="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-sm transition">
+                            🎲 ランダムデータ生成
+                        </button>
+                        <button onClick={() => injectNoise(1)} className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-md transition">
+                            ⚡ 1ビットノイズ発生
+                        </button>
+                        <button onClick={() => injectNoise(2)} className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-md transition">
+                            ⚡⚡ 2ビットノイズ発生 (問5検証)
+                        </button>
+                    </div>
+
+                    {/* Status Alert Box */}
+                    <div className={`p-4 rounded-2xl border flex items-center justify-between shadow-sm ${isErrorDetected ? 'bg-red-50 border-red-300 text-red-900' : 'bg-emerald-50 border-emerald-300 text-emerald-900'}`}>
+                        <div>
+                            <div className="font-extrabold text-base flex items-center space-x-2">
+                                <span>{isErrorDetected ? '⚠️ データに誤りがあります！' : '✅ データは正常（誤りなし、または未検出）'}</span>
+                            </div>
+                            <p className="text-xs mt-1 text-slate-600 font-medium">
+                                受信データ全8ビット内の「1」の合計: <span className="font-bold text-slate-900">{currentOnes} 個</span> ({parityType === 'even' ? '偶数' : '奇数'}パリティルール)
+                            </p>
+                        </div>
+                        <div className="text-right text-xs font-mono bg-white px-3 py-2 rounded-xl border border-slate-200 font-bold">
+                            kosu % 2 == {currentOnes % 2}
+                        </div>
+                    </div>
+
+                    {/* Learning Note */}
+                    <div className="bg-blue-50/80 p-4 rounded-2xl border border-blue-200 text-xs text-blue-900 space-y-1.5">
+                        <p className="font-bold text-blue-700 flex items-center gap-1">💡 高校生のポイント（問5の学び）</p>
+                        <p>• 1ビット誤りが発生すると「1の個数の奇偶」が入れ替わるため、受信側で確実にエラーを検出できます。</p>
+                        <p>• 2ビット誤りが起きると奇偶が元に戻るため、エラーが発生しているにも関わらず「正常」と誤判定されます（問5の答え：検出不可能）。</p>
+                    </div>
+                </div>
+            );
+        }
+
+        function TwoDParitySim() {
+            // 4x4データから水平・垂直パリティビットを計算して5x5グリッドを生成するヘルパー
+            const create5x5Grid = (data4x4) => {
+                const full = Array.from({ length: 5 }, () => Array(5).fill(0));
+                for (let r = 0; r < 4; r++) {
+                    let rowSum = 0;
+                    for (let c = 0; c < 4; c++) {
+                        full[r][c] = data4x4[r][c];
+                        rowSum += data4x4[r][c];
+                    }
+                    full[r][4] = rowSum % 2; // 水平パリティビット
+                }
+                for (let c = 0; c < 4; c++) {
+                    let colSum = 0;
+                    for (let r = 0; r < 4; r++) {
+                        colSum += data4x4[r][c];
+                    }
+                    full[4][c] = colSum % 2; // 垂直パリティビット
+                }
+                let cornerSum = 0;
+                for (let r = 0; r < 4; r++) cornerSum += full[r][4];
+                full[4][4] = cornerSum % 2;
+                return full;
+            };
+
+            const initialData = [
+                [0, 0, 0, 1],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [0, 1, 0, 1]
+            ];
+
+            const [grid, setGrid] = useState(() => create5x5Grid(initialData));
+
+            // 各行・各列（データ＋パリティビット）の合計値を計算
+            const rowSums = grid.slice(0, 4).map(row => row.reduce((a, b) => a + b, 0));
+            const colSums = [0, 1, 2, 3].map(colIdx => {
+                let sum = 0;
+                for (let r = 0; r < 5; r++) sum += grid[r][colIdx];
+                return sum;
+            });
+
+            // 偶数パリティの判定：1の総和が奇数であればパリティエラーが発生
+            const rowErrors = rowSums.map(s => s % 2 !== 0);
+            const colErrors = colSums.map(s => s % 2 !== 0);
+
+            const errRowIdx = rowErrors.findIndex(e => e);
+            const errColIdx = colErrors.findIndex(e => e);
+
+            const toggleCell = (r, c) => {
+                if (r >= 5 || c >= 5) return;
+                const next = grid.map(row => [...row]);
+                next[r][c] = next[r][c] === 0 ? 1 : 0;
+                setGrid(next);
+            };
+
+            const autoCorrect = () => {
+                if (errRowIdx !== -1 && errColIdx !== -1) {
+                    toggleCell(errRowIdx, errColIdx);
+                }
+            };
+
+            const generateRandom = () => {
+                const nextData = Array.from({ length: 4 }, () =>
+                    Array.from({ length: 4 }, () => Math.random() < 0.5 ? 0 : 1)
+                );
+                setGrid(create5x5Grid(nextData));
+            };
+
+            const injectRandomNoise = () => {
+                const r = Math.floor(Math.random() * 4);
+                const c = Math.floor(Math.random() * 4);
+                toggleCell(r, c);
+            };
+
+            return (
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+                    <div className="border-b border-slate-100 pb-4">
+                        <h2 className="text-lg font-bold text-slate-900">2次元パリティ (水平垂直パリティ) シミュレータ</h2>
+                        <p className="text-xs text-slate-500">4×4データに水平・垂直パリティを付与した5×5配列です。セルをタップしてノイズを与えてみましょう。</p>
+                    </div>
+
+                    {/* 5x5 Grid UI */}
+                    <div className="flex justify-center my-4">
+                        <div className="inline-block bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-inner">
+                            {/* Column Header */}
+                            <div className="grid grid-cols-6 gap-2 mb-2 text-center text-xs font-mono font-bold text-slate-500">
+                                <div></div>
+                                <div>1列</div>
+                                <div>2列</div>
+                                <div>3列</div>
+                                <div>4列</div>
+                                <div className="text-amber-700">5列(P)</div>
+                            </div>
+
+                            {[0, 1, 2, 3].map(r => (
+                                <div key={r} className="grid grid-cols-6 gap-2 mb-2 items-center">
+                                    <div className="text-xs font-mono text-slate-500 font-bold text-right pr-2">{r + 1}行</div>
+                                    {[0, 1, 2, 3].map(c => {
+                                        const isErrorCell = (r === errRowIdx && c === errColIdx);
+                                        return (
+                                            <button
+                                                key={c}
+                                                onClick={() => toggleCell(r, c)}
+                                                className={`w-12 h-12 rounded-xl font-mono text-xl font-extrabold flex items-center justify-center transition-all transform hover:scale-105 border-2 shadow-sm ${isErrorCell ? 'bg-red-600 border-red-700 text-white animate-bounce shadow-lg shadow-red-500/50' : grid[r][c] === 1 ? 'bg-blue-600 border-blue-700 text-white' : 'bg-white border-slate-300 text-slate-600'}`}
+                                            >
+                                                <span>{grid[r][c]}</span>
+                                            </button>
+                                        );
+                                    })}
+                                    {/* Horizontal Parity */}
+                                    <button
+                                        onClick={() => toggleCell(r, 4)}
+                                        className={`w-12 h-12 rounded-xl font-mono text-xl font-bold flex items-center justify-center border-2 transition-all transform hover:scale-105 ${rowErrors[r] ? 'bg-red-100 border-red-400 text-red-700 animate-pulse' : 'bg-amber-100 border-amber-300 text-amber-900'}`}
+                                    >
+                                        {grid[r][4]}
+                                    </button>
+                                </div>
+                            ))}
+
+                            {/* Row 5: Vertical Parity Header */}
+                            <div className="grid grid-cols-6 gap-2 items-center pt-2 border-t border-slate-300">
+                                <div className="text-xs font-mono text-amber-700 font-bold text-right pr-2">5行(P)</div>
+                                {[0, 1, 2, 3].map(c => (
+                                    <button
+                                        key={c}
+                                        onClick={() => toggleCell(4, c)}
+                                        className={`w-12 h-12 rounded-xl font-mono text-xl font-bold flex items-center justify-center border-2 transition-all transform hover:scale-105 ${colErrors[c] ? 'bg-red-100 border-red-400 text-red-700 animate-pulse' : 'bg-amber-100 border-amber-300 text-amber-900'}`}
+                                    >
+                                        {grid[4][c]}
+                                    </button>
+                                ))}
+                                <div className="w-12 h-12 rounded-xl font-mono text-xs font-bold flex items-center justify-center border border-slate-300 bg-slate-200 text-slate-500">
+                                    {grid[4][4]}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Action Controls */}
+                    <div className="flex flex-wrap gap-3 justify-center">
+                        <button onClick={generateRandom} className="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-sm transition">
+                            🎲 ランダム4×4データ
+                        </button>
+                        <button
+                            onClick={injectRandomNoise}
+                            disabled={errRowIdx !== -1 && errColIdx !== -1}
+                            className="px-4 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-md transition"
+                        >
+                            ⚡ 1ビットノイズ注入 (問18)
+                        </button>
+                        {errRowIdx !== -1 && errColIdx !== -1 && (
+                            <button onClick={autoCorrect} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-md animate-pulse">
+                                🛠️ 誤りセル（{errRowIdx + 1}行{errColIdx + 1}列）を自動修復！ (問12,13)
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Status Box */}
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1">
+                        <h3 className="text-xs font-bold text-slate-500">受信側自動分析ステータス（問13, 問19の解説）</h3>
+                        {errRowIdx !== -1 && errColIdx !== -1 ? (
+                            <div className="text-red-700 text-sm font-bold flex items-center gap-2">
+                                <span>⚠️ エラー特定：</span>
+                                <span className="bg-red-100 px-3 py-1 rounded-lg border border-red-300 font-mono">
+                                    {errRowIdx + 1}行目 {errColIdx + 1}列目 に誤りを検出しました
+                                </span>
+                            </div>
+                        ) : (
+                            <div className="text-emerald-700 text-sm font-bold">
+                                ✅ 全ての行・列パリティが一致（誤りなし）
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function AsciiCompressSim() {
+            const [inputText, setInputText] = useState('jyazu');
+
+            const asciiHex = inputText.split('').map(c => c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')).join(' ');
+            const asciiBin = inputText.split('').map(c => c.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');
+            const totalBits = inputText.length * 8;
+
+            return (
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+                    <div>
+                        <h2 className="text-lg font-bold text-slate-900">ASCIIコード & データ圧縮ビジュアライザー</h2>
+                        <p className="text-xs text-slate-500">16進数・2進数変換（問2）と16×16ビットのランレングス圧縮（問3）の解説デモです。</p>
+                    </div>
+
+                    {/* ASCII Converter Card */}
+                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                        <h3 className="text-xs font-bold text-slate-500 uppercase">① ASCIIコード変換（問2の検証）</h3>
+                        <div className="flex items-center space-x-3">
+                            <label className="text-xs font-bold text-slate-600">英文字列入力:</label>
+                            <input
+                                type="text"
+                                value={inputText}
+                                onChange={(e) => setInputText(e.target.value)}
+                                className="bg-white border border-slate-300 rounded-xl px-3 py-1.5 font-mono text-sm text-blue-600 font-bold focus:outline-none focus:border-blue-500 shadow-sm"
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono text-xs">
+                            <div className="bg-white p-3.5 rounded-xl border border-slate-200">
+                                <div className="text-slate-400 text-[10px] font-sans">16進数表現</div>
+                                <div className="text-amber-600 font-bold mt-1 text-sm">{asciiHex || 'なし'}</div>
+                            </div>
+                            <div className="bg-white p-3.5 rounded-xl border border-slate-200">
+                                <div className="text-slate-400 text-[10px] font-sans">2進数表現</div>
+                                <div className="text-blue-600 font-bold mt-1 tracking-wider text-xs break-all">{asciiBin || 'なし'}</div>
+                            </div>
+                            <div className="bg-white p-3.5 rounded-xl border border-slate-200">
+                                <div className="text-slate-400 text-[10px] font-sans">総ビット数 (桁数)</div>
+                                <div className="text-emerald-600 font-bold mt-1 text-sm">{totalBits} ビット</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Run length Compression Card */}
+                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <h3 className="text-xs font-bold text-slate-500 uppercase">② ランレングス圧縮（問3の検証デモ）</h3>
+                        <p className="text-xs text-slate-600">
+                            図2の1行目「0が3個, 1が8個, 0が5個」をルールに従って圧縮する例です。
+                        </p>
+                        <div className="bg-white p-4 rounded-xl font-mono text-xs space-y-2 border border-slate-200 shadow-sm">
+                            <div className="flex justify-between text-slate-500 border-b border-slate-100 pb-2">
+                                <span>元の16ビットデータ</span>
+                                <span className="text-red-600 font-bold">0001111111100000 (16 bits)</span>
+                            </div>
+                            <div className="space-y-1 pt-1 font-sans">
+                                <div>• 先頭ビット (0で始まる): <span className="text-amber-600 font-bold font-mono">0</span> (1bit)</div>
+                                <div>• 0が3個続く (3-1=2): <span className="text-blue-600 font-bold font-mono">0010</span> (4bits)</div>
+                                <div>• 1が8個続く (8-1=7): <span className="text-blue-600 font-bold font-mono">0111</span> (4bits)</div>
+                                <div>• 0が5個続く (5-1=4): <span className="text-blue-600 font-bold font-mono">0100</span> (4bits)</div>
+                            </div>
+                            <div className="border-t border-slate-100 pt-2 flex justify-between font-bold text-blue-600 font-mono text-sm">
+                                <span>圧縮後データ (15ビット)</span>
+                                <span>0 0010 0111 0100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function QuizView() {
+            const [answers, setAnswers] = useState({});
+            const [multiInputs, setMultiInputs] = useState({});
+            const [submitted, setSubmitted] = useState({});
+
+            const handleOptionSelect = (qId, optionIdx) => {
+                setAnswers(prev => ({ ...prev, [qId]: optionIdx }));
+            };
+
+            const handleInputChange = (qId, value) => {
+                setAnswers(prev => ({ ...prev, [qId]: value }));
+            };
+
+            const handleMultiInputChange = (qId, idx, value) => {
+                setMultiInputs(prev => ({
+                    ...prev,
+                    [qId]: { ...prev[qId], [idx]: value }
+                }));
+            };
+
+            const checkAnswer = (qId) => {
+                setSubmitted(prev => ({ ...prev, [qId]: true }));
+            };
+
+            return (
+                <div className="space-y-6 max-w-4xl mx-auto">
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
+                        <div>
+                            <h2 className="text-xl font-extrabold text-slate-900">PDF演習問題（全20問）</h2>
+                            <p className="text-xs text-slate-500 mt-0.5">共通テスト・高校情報Iテストレベルの融合問題集です。</p>
+                        </div>
+                    </div>
+
+                    {QUESTIONS.map((q) => {
+                        const isSub = submitted[q.id];
+                        let isCorrect = false;
+
+                        if (q.type === 'input') {
+                            isCorrect = (answers[q.id] || '').trim() === q.correct;
+                        } else if (q.type === 'multi_input') {
+                            const cur = multiInputs[q.id] || {};
+                            isCorrect = cur[0] === q.corrects[0] && cur[1] === q.corrects[1];
+                        } else {
+                            isCorrect = answers[q.id] === q.correct;
+                        }
+
+                        return (
+                            <div key={q.id} className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                                <div className="flex justify-between items-start">
+                                    <h3 className="font-extrabold text-base text-slate-900">{q.title}</h3>
+                                    {isSub && (
+                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${isCorrect ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-red-100 text-red-800 border border-red-300'}`}>
+                                            {isCorrect ? '正解！⭕' : '不正解 ❌'}
+                                        </span>
+                                    )}
+                                </div>
+
+                                <p className="text-xs sm:text-sm text-slate-700 whitespace-pre-line leading-relaxed font-sans bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                    {q.q}
+                                </p>
+
+                                {/* Input Controls */}
+                                {q.type === 'input' && (
+                                    <div className="flex space-x-3 items-center">
+                                        <input
+                                            type="text"
+                                            value={answers[q.id] || ''}
+                                            onChange={(e) => handleInputChange(q.id, e.target.value)}
+                                            placeholder="回答を入力"
+                                            className="bg-white border border-slate-300 rounded-xl px-4 py-2 font-mono text-sm text-slate-900 focus:outline-none focus:border-blue-500 w-48 shadow-sm"
+                                        />
+                                    </div>
+                                )}
+
+                                {q.type === 'multi_input' && (
+                                    <div className="flex space-x-3 items-center text-sm font-mono">
+                                        <input
+                                            type="text"
+                                            placeholder="行"
+                                            onChange={(e) => handleMultiInputChange(q.id, 0, e.target.value.trim())}
+                                            className="bg-white border border-slate-300 rounded-xl px-3 py-2 w-20 text-center font-bold text-slate-900 shadow-sm"
+                                        />
+                                        <span className="font-sans font-bold text-xs text-slate-600">行目</span>
+                                        <input
+                                            type="text"
+                                            placeholder="列"
+                                            onChange={(e) => handleMultiInputChange(q.id, 1, e.target.value.trim())}
+                                            className="bg-white border border-slate-300 rounded-xl px-3 py-2 w-20 text-center font-bold text-slate-900 shadow-sm"
+                                        />
+                                        <span className="font-sans font-bold text-xs text-slate-600">列目</span>
+                                    </div>
+                                )}
+
+                                {!q.type && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        {q.options.map((opt, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => handleOptionSelect(q.id, idx)}
+                                                className={`text-left px-4 py-3 rounded-xl border text-xs sm:text-sm font-medium transition ${answers[q.id] === idx ? 'bg-blue-50 border-blue-500 text-blue-900 font-bold shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}`}
+                                            >
+                                                {opt}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className="pt-2">
+                                    <button
+                                        onClick={() => checkAnswer(q.id)}
+                                        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-md"
+                                    >
+                                        回答を判定する
+                                    </button>
+                                </div>
+
+                                {isSub && (
+                                    <div className="mt-3 p-4 bg-blue-50/80 rounded-xl border border-blue-200 text-xs text-blue-950 space-y-1">
+                                        <div className="font-bold text-blue-700">💡 解答・解説</div>
+                                        <p className="leading-relaxed">{q.explain}</p>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
